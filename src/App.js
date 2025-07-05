@@ -1,4 +1,64 @@
 import React, { useState, useEffect } from 'react';
+import { db } from './firebase';
+import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
+
+// Firebase 실제 연동 함수들
+const saveToFirebase = async (date, reportData) => {
+  try {
+    const docRef = doc(db, 'dailyReports', date);
+    await setDoc(docRef, { 
+      ...reportData, 
+      lastUpdated: serverTimestamp(), 
+      lastUpdatedBy: reportData.senderName 
+    });
+    
+    console.log('Firebase 저장 완료:', date, reportData);
+    return true;
+  } catch (error) {
+    console.error('Firebase 저장 실패:', error);
+    return false;
+  }
+};
+
+const loadFromFirebase = async (date) => {
+  try {
+    const docRef = doc(db, 'dailyReports', date);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log('Firebase 불러오기 완료:', date, data);
+      return data;
+    } else {
+      console.log('해당 날짜의 데이터가 없습니다:', date);
+      return null;
+    }
+  } catch (error) {
+    console.error('Firebase 불러오기 실패:', error);
+    return null;
+  }
+};
+
+const getAllReports = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'dailyReports'));
+    const reports = [];
+    
+    querySnapshot.forEach((doc) => {
+      reports.push({
+        id: doc.id,
+        date: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    console.log('Firebase 전체 데이터 불러오기 완료:', reports);
+    return reports.sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch (error) {
+    console.error('전체 데이터 불러오기 실패:', error);
+    return [];
+  }
+};
 
 const DailyReportPlatform = () => {
   const [currentMedia, setCurrentMedia] = useState('');
@@ -46,6 +106,7 @@ const DailyReportPlatform = () => {
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [showTeamView, setShowTeamView] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastUpdatedBy, setLastUpdatedBy] = useState('');
 
   const mediaList = [
     { id: 'DA전체', name: 'DA 전체', icon: '📊', bgColor: '#3B82F6' },
@@ -209,18 +270,60 @@ const DailyReportPlatform = () => {
     }
   };
 
-  const loadDataForDate = async (date) => {
+  const handleDateChange = async (newDate) => {
     setIsLoading(true);
-    try {
-      const saved = localStorage.getItem(`dailyReport_${date}`);
+    
+    // 현재 데이터 저장
+    if (reportData.date) {
+      await saveToFirebase(reportData.date, reportData);
+    }
+    
+    // 새 날짜에 대한 데이터 불러오기
+    const savedData = await loadFromFirebase(newDate);
+    
+    const defaultData = {
+      date: newDate,
+      senderName: reportData.senderName,
+      daOverall: {
+        totalBudget: '',
+        totalLeads: '',
+        totalCPA: '',
+        image: null
+      },
+      mediaDetails: {
+        '토스': { content: '', image: null, noUpdate: false },
+        '네이버GFA': { content: '', image: null, noUpdate: false },
+        '네이버NOSP': { content: '', image: null, noUpdate: false },
+        '카카오': { content: '', image: null, noUpdate: false },
+        '구글': { content: '', image: null, noUpdate: false },
+        '메타': { content: '', image: null, noUpdate: false },
+        '앱캠페인': { content: '', image: null, noUpdate: false }
+      },
+      partnership: {
+        totalBudget: '',
+        totalLeads: '',
+        totalCPA: '',
+        details: '',
+        image: null,
+        weeklyPlan: ''
+      },
+      attachmentNote: ''
+    };
+
+    setReportData(savedData || defaultData);
+    setLastUpdatedBy(savedData?.lastUpdatedBy || '');
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      setIsLoading(true);
+      const defaultDate = getDefaultDate();
       
-      if (saved) {
-        const parsedData = JSON.parse(saved);
-        return { ...parsedData, date };
-      }
+      const savedData = await loadFromFirebase(defaultDate);
       
-      return {
-        date,
+      const defaultData = {
+        date: defaultDate,
         senderName: '박희수',
         daOverall: {
           totalBudget: '',
@@ -247,77 +350,32 @@ const DailyReportPlatform = () => {
         },
         attachmentNote: ''
       };
-    } catch (error) {
-      console.error('데이터 불러오기 실패:', error);
-      return null;
-    } finally {
+
+      setReportData(savedData || defaultData);
+      setLastUpdatedBy(savedData?.lastUpdatedBy || '');
+      
+      const reports = await getAllReports();
+      setAllReports(reports);
       setIsLoading(false);
-    }
-  };
-
-  const saveDataToStorage = async (data) => {
-    try {
-      localStorage.setItem(`dailyReport_${data.date}`, JSON.stringify(data));
-      setSyncSuccess(true);
-      setTimeout(() => setSyncSuccess(false), 2000);
-      return true;
-    } catch (error) {
-      console.error('데이터 저장 실패:', error);
-      return false;
-    }
-  };
-
-  const loadAllReports = async () => {
-    try {
-      const reports = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('dailyReport_')) {
-          const data = JSON.parse(localStorage.getItem(key));
-          reports.push({
-            id: key.replace('dailyReport_', ''),
-            date: key.replace('dailyReport_', ''),
-            ...data,
-            lastUpdated: new Date().toISOString()
-          });
-        }
-      }
-      setAllReports(reports.sort((a, b) => new Date(b.date) - new Date(a.date)));
-    } catch (error) {
-      console.error('전체 리포트 불러오기 실패:', error);
-    }
-  };
-
-  const handleDateChange = async (newDate) => {
-    await saveDataToStorage(reportData);
-    const newData = await loadDataForDate(newDate);
-    if (newData) {
-      setReportData(newData);
-    }
-  };
-
-  useEffect(() => {
-    const initializeData = async () => {
-      const defaultDate = getDefaultDate();
-      const initialData = await loadDataForDate(defaultDate);
-      if (initialData) {
-        setReportData(initialData);
-      }
-      await loadAllReports();
     };
     
     initializeData();
   }, []);
 
+  // 자동 저장 (10초마다)
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
-      if (reportData.date) {
-        await saveDataToStorage(reportData);
+      if (reportData.date && !isLoading) {
+        const success = await saveToFirebase(reportData.date, reportData);
+        if (success) {
+          setSyncSuccess(true);
+          setTimeout(() => setSyncSuccess(false), 2000);
+        }
       }
-    }, 30000);
+    }, 10000);
 
     return () => clearInterval(autoSaveInterval);
-  }, [reportData]);
+  }, [reportData, isLoading]);
 
   const handleImagePaste = (e, section, media = null) => {
     e.preventDefault();
@@ -476,20 +534,22 @@ const DailyReportPlatform = () => {
   };
 
   const saveCurrentData = async () => {
-    const success = await saveDataToStorage(reportData);
+    const success = await saveToFirebase(reportData.date, reportData);
     if (success) {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
-      await loadAllReports();
+      const reports = await getAllReports();
+      setAllReports(reports);
     }
   };
 
   const archiveData = async () => {
-    const success = await saveDataToStorage(reportData);
+    const success = await saveToFirebase(reportData.date, reportData);
     if (success) {
       setArchiveSuccess(true);
       setTimeout(() => setArchiveSuccess(false), 2000);
-      await loadAllReports();
+      const reports = await getAllReports();
+      setAllReports(reports);
     }
   };
 
@@ -528,7 +588,7 @@ const DailyReportPlatform = () => {
     };
     
     setReportData(emptyData);
-    await saveDataToStorage(emptyData);
+    await saveToFirebase(reportData.date, emptyData);
     setShowResetConfirm(false);
     setResetSuccess(true);
     setTimeout(() => setResetSuccess(false), 2000);
@@ -539,11 +599,20 @@ const DailyReportPlatform = () => {
   };
 
   const loadArchivedData = async (date) => {
-    const data = await loadDataForDate(date);
-    if (data) {
-      setReportData(data);
-      setShowArchive(false);
-      setShowTeamView(false);
+    try {
+      setIsLoading(true);
+      const data = await loadFromFirebase(date);
+      
+      if (data) {
+        setReportData({ ...data, date });
+        setLastUpdatedBy(data.lastUpdatedBy || '');
+        setShowArchive(false);
+        setShowTeamView(false);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error('아카이브 데이터 불러오기 실패:', error);
+      setIsLoading(false);
     }
   };
 
@@ -590,7 +659,20 @@ const DailyReportPlatform = () => {
             </div>
           </div>
           
-          {allReports.length === 0 ? (
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                border: '3px solid #3B82F6', 
+                borderTop: '3px solid transparent', 
+                borderRadius: '50%', 
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 16px'
+              }}></div>
+              <p style={{ color: '#6B7280', fontSize: '16px' }}>데이터를 불러오는 중...</p>
+            </div>
+          ) : allReports.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>📁</div>
               <p style={{ color: '#6B7280', fontSize: '16px' }}>저장된 리포트가 없습니다.</p>
@@ -628,7 +710,7 @@ const DailyReportPlatform = () => {
                         {report.senderName}
                       </div>
                       <div style={{ fontSize: '12px', color: '#6B7280' }}>
-                        {report.date}
+                        {report.lastUpdatedBy && `최종 수정: ${report.lastUpdatedBy}`}
                       </div>
                     </div>
                     <div style={{ fontSize: '24px' }}>📅</div>
@@ -656,17 +738,22 @@ const DailyReportPlatform = () => {
                   width: '12px', 
                   height: '12px', 
                   borderRadius: '50%', 
-                  backgroundColor: isOnline ? '#10B981' : '#EF4444',
+                  backgroundColor: '#10B981',
                   marginRight: '8px'
                 }}></div>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>
-                  {isOnline ? '온라인 모드' : '오프라인 모드'}
+                  🔥 Firebase 실시간 동기화 활성화
                 </span>
                 <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
-                  (완전 무료 - 로컬 저장)
+                  (팀원 모두 실시간 공유)
                 </span>
                 {syncSuccess && (
-                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 저장 완료</span>
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 동기화 완료</span>
+                )}
+                {lastUpdatedBy && (
+                  <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
+                    마지막 수정: {lastUpdatedBy}
+                  </span>
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -867,7 +954,7 @@ const DailyReportPlatform = () => {
                   <p style={{ color: '#6B7280', marginBottom: '24px', lineHeight: '1.5' }}>
                     {formatDate(reportData.date)} 모든 정보를 초기화할까요?
                     <br />
-                    <span style={{ color: '#EF4444', fontWeight: '500' }}>이 작업은 되돌릴 수 없습니다.</span>
+                    <span style={{ color: '#EF4444', fontWeight: '500' }}>이 작업은 되돌릴 수 없으며, 모든 팀원에게 영향을 줍니다.</span>
                   </p>
                   <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
                     <button
