@@ -987,101 +987,174 @@ const DailyReportPlatform = () => {
     );
   }
 
-  if (currentMedia === '미리보기') {
-    return (
-      <div style={styles.container}>
-        <div style={styles.mainCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button
-                onClick={() => setCurrentMedia('')}
-                style={{
-                  ...styles.button,
-                  backgroundColor: '#F3F4F6',
-                  color: '#374151',
-                  padding: '8px 12px',
-                  marginRight: '16px'
-                }}
-              >
-                ←
-              </button>
-              <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>메일 미리보기</h1>
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={saveToGmailDrafts}
-                disabled={isGmailLoading}
-                style={{
-                  ...styles.button,
-                  backgroundColor: gmailSaveSuccess ? '#10B981' : isGmailLoading ? '#9CA3AF' : '#DC2626',
-                  color: 'white',
-                  cursor: isGmailLoading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {isGmailLoading ? (
-                  <>
-                    <div style={{ 
-                      width: '16px', 
-                      height: '16px', 
-                      border: '2px solid white', 
-                      borderTop: '2px solid transparent', 
-                      borderRadius: '50%', 
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
-                    처리중...
-                  </>
-                ) : gmailSaveSuccess ? (
-                  <>
-                    <span>✅</span>
-                    Gmail 열림!
-                  </>
-                ) : (
-                  <>
-                    <span>📧</span>
-                    Gmail 임시보관함
-                  </>
-                )}
-              </button>
-              <button
-                onClick={copyEmailToClipboard}
-                style={{
-                  ...styles.button,
-                  backgroundColor: copySuccess ? '#10B981' : '#3B82F6',
-                  color: 'white'
-                }}
-              >
-                <span>{copySuccess ? '✅' : '📋'}</span>
-                {copySuccess ? '복사됨!' : '복사'}
-              </button>
-            </div>
+  // 미리보기 화면 부분만 수정 (App.js에서 해당 부분 교체)
+
+if (currentMedia === '미리보기') {
+  return (
+    <div style={styles.container}>
+      <div style={styles.mainCard}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              onClick={() => setCurrentMedia('')}
+              style={{
+                ...styles.button,
+                backgroundColor: '#F3F4F6',
+                color: '#374151',
+                padding: '8px 12px',
+                marginRight: '16px'
+              }}
+            >
+              ←
+            </button>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>전체 미리보기</h1>
           </div>
-          
-          <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
-            <div style={{ marginBottom: '16px', padding: '16px', backgroundColor: '#DBEAFE', borderRadius: '8px' }}>
-              <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>받는사람:</strong> 박영빈님/TM마케팅파트 &lt;yb.park@meritz.co.kr&gt;
-              </p>
-              <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>참조:</strong> 김윤희님/TM마케팅파트, 이원진/리더/TM마케팅파트, echo_메리츠다이렉트, 디트라이브_팀메일
-              </p>
-              <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>제목:</strong> [에코/장기TM/DA] 메리츠화재 데일리보고_25년 {formatEmailDate(reportData.date)}
-              </p>
-            </div>
-            <div style={{ 
-              whiteSpace: 'pre-wrap', 
-              fontSize: '14px', 
-              color: '#1F2937', 
-              fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-              lineHeight: '1.5'
-            }}>
-              {generatedEmail}
-            </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={saveToGmailDrafts}
+              disabled={isGmailLoading}
+              style={{
+                ...styles.button,
+                backgroundColor: gmailSaveSuccess ? '#10B981' : isGmailLoading ? '#9CA3AF' : '#DC2626',
+                color: 'white',
+                cursor: isGmailLoading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {isGmailLoading ? (
+                <>
+                  <div style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid white', 
+                    borderTop: '2px solid transparent', 
+                    borderRadius: '50%', 
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  처리중...
+                </>
+              ) : gmailSaveSuccess ? (
+                <>
+                  <span>✅</span>
+                  Gmail 열림!
+                </>
+              ) : (
+                <>
+                  <span>📧</span>
+                  Gmail 임시보관함
+                </>
+              )}
+            </button>
+            <button
+              onClick={copyEmailToClipboard}
+              style={{
+                ...styles.button,
+                backgroundColor: copySuccess ? '#10B981' : '#3B82F6',
+                color: 'white'
+              }}
+            >
+              <span>{copySuccess ? '✅' : '📋'}</span>
+              {copySuccess ? '복사됨!' : '메일 복사'}
+            </button>
           </div>
         </div>
+        
+        {/* 메일 정보 */}
+        <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '24px' }}>
+          <div style={{ marginBottom: '16px', padding: '16px', backgroundColor: '#DBEAFE', borderRadius: '8px' }}>
+            <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
+              <strong>받는사람:</strong> 박영빈님/TM마케팅파트 &lt;yb.park@meritz.co.kr&gt;
+            </p>
+            <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
+              <strong>참조:</strong> 김윤희님/TM마케팅파트, 이원진/리더/TM마케팅파트, echo_메리츠다이렉트, 디트라이브_팀메일
+            </p>
+            <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
+              <strong>제목:</strong> [에코/장기TM/DA] 메리츠화재 데일리보고_25년 {formatEmailDate(reportData.date)}
+            </p>
+          </div>
+          <div style={{ 
+            whiteSpace: 'pre-wrap', 
+            fontSize: '14px', 
+            color: '#1F2937', 
+            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+            lineHeight: '1.5'
+          }}>
+            {generatedEmail}
+          </div>
+        </div>
+
+        {/* 이미지 미리보기 섹션 */}
+        <div style={{ backgroundColor: '#F8FAFC', padding: '24px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1F2937', marginBottom: '20px' }}>📸 첨부 이미지</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+            {/* DA 전체 이미지 */}
+            {reportData.daOverall.image && (
+              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>📊 DA 전체</h4>
+                <img 
+                  src={reportData.daOverall.image} 
+                  alt="DA 전체" 
+                  style={{ 
+                    width: '100%', 
+                    height: 'auto', 
+                    maxHeight: '200px', 
+                    objectFit: 'contain',
+                    borderRadius: '4px',
+                    border: '1px solid #E5E7EB'
+                  }} 
+                />
+              </div>
+            )}
+
+            {/* 각 매체별 이미지 */}
+            {Object.entries(reportData.mediaDetails).map(([media, data]) => (
+              data.image && (
+                <div key={media} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
+                    {mediaList.find(m => m.id === media)?.icon} {media}
+                  </h4>
+                  <img 
+                    src={data.image} 
+                    alt={media} 
+                    style={{ 
+                      width: '100%', 
+                      height: 'auto', 
+                      maxHeight: '200px', 
+                      objectFit: 'contain',
+                      borderRadius: '4px',
+                      border: '1px solid #E5E7EB'
+                    }} 
+                  />
+                </div>
+              )
+            ))}
+
+            {/* 제휴 이미지 */}
+            {reportData.partnership.image && (
+              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>🤝 제휴</h4>
+                <img 
+                  src={reportData.partnership.image} 
+                  alt="제휴" 
+                  style={{ 
+                    width: '100%', 
+                    height: 'auto', 
+                    maxHeight: '200px', 
+                    objectFit: 'contain',
+                    borderRadius: '4px',
+                    border: '1px solid #E5E7EB'
+                  }} 
+                />
+              </div>
+            )}
+          </div>
+
+
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div style={styles.container}>
