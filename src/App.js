@@ -989,7 +989,138 @@ const DailyReportPlatform = () => {
 
   // 미리보기 화면 부분만 수정 (App.js에서 해당 부분 교체)
 
+// App.js에서 미리보기 부분만 교체하세요
+
 if (currentMedia === '미리보기') {
+  // 이미지 포함 이메일 섹션 생성
+  const generateEmailWithImages = () => {
+    const formattedDate = formatDate(reportData.date);
+    const senderName = reportData.senderName || '박희수';
+    
+    const emailSections = [];
+    
+    // 인사말
+    emailSections.push({
+      type: 'text',
+      content: `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`
+    });
+    
+    if (reportData.attachmentNote.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `${reportData.attachmentNote}\n\n`
+      });
+    } else {
+      emailSections.push({
+        type: 'text',
+        content: `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`
+      });
+    }
+    
+    // DA 파트
+    emailSections.push({
+      type: 'text',
+      content: `* DA 파트\n[전체]\n`
+    });
+    
+    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
+      emailSections.push({
+        type: 'text',
+        content: `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`
+      });
+    }
+    
+    // DA 전체 이미지
+    if (reportData.daOverall.image) {
+      emailSections.push({
+        type: 'image',
+        src: reportData.daOverall.image,
+        alt: 'DA 전체 성과'
+      });
+    }
+    
+    // 미디어 상세
+    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
+    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
+    
+    if (hasMediaContent) {
+      emailSections.push({
+        type: 'text',
+        content: `[미디어 상세]\n`
+      });
+      
+      let mediaCount = 0;
+      mediaOrder.forEach(media => {
+        const data = reportData.mediaDetails[media];
+        if (data?.content?.trim()) {
+          mediaCount++;
+          emailSections.push({
+            type: 'text',
+            content: `${mediaCount}. ${media}\n${data.content}\n\n`
+          });
+          
+          // 각 미디어별 이미지 추가
+          if (data.image) {
+            emailSections.push({
+              type: 'image',
+              src: data.image,
+              alt: `${media} 성과`
+            });
+          }
+        }
+      });
+    }
+    
+    // 제휴 파트
+    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `* 제휴 파트\n`
+      });
+      
+      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
+        emailSections.push({
+          type: 'text',
+          content: `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`
+        });
+      }
+      
+      if (reportData.partnership.details?.trim()) {
+        emailSections.push({
+          type: 'text',
+          content: `${reportData.partnership.details}\n\n`
+        });
+      }
+      
+      // 제휴 이미지 추가
+      if (reportData.partnership.image) {
+        emailSections.push({
+          type: 'image',
+          src: reportData.partnership.image,
+          alt: '제휴 성과'
+        });
+      }
+    }
+    
+    // 금주 MKT 플랜
+    if (reportData.partnership.weeklyPlan?.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`
+      });
+    }
+    
+    // 마무리 인사
+    emailSections.push({
+      type: 'text',
+      content: `감사합니다.\n${senderName} 드림`
+    });
+    
+    return emailSections;
+  };
+
+  const emailSections = generateEmailWithImages();
+
   return (
     <div style={styles.container}>
       <div style={styles.mainCard}>
@@ -1007,7 +1138,7 @@ if (currentMedia === '미리보기') {
             >
               ←
             </button>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>전체 미리보기</h1>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>메일 미리보기</h1>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
@@ -1053,13 +1184,12 @@ if (currentMedia === '미리보기') {
               }}
             >
               <span>{copySuccess ? '✅' : '📋'}</span>
-              {copySuccess ? '복사됨!' : '메일 복사'}
+              {copySuccess ? '복사됨!' : '복사'}
             </button>
           </div>
         </div>
         
-        {/* 메일 정보 */}
-        <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
           <div style={{ marginBottom: '16px', padding: '16px', backgroundColor: '#DBEAFE', borderRadius: '8px' }}>
             <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
               <strong>받는사람:</strong> 박영빈님/TM마케팅파트 &lt;yb.park@meritz.co.kr&gt;
@@ -1071,85 +1201,59 @@ if (currentMedia === '미리보기') {
               <strong>제목:</strong> [에코/장기TM/DA] 메리츠화재 데일리보고_25년 {formatEmailDate(reportData.date)}
             </p>
           </div>
+          
+          {/* 메일 내용 + 이미지 */}
           <div style={{ 
-            whiteSpace: 'pre-wrap', 
-            fontSize: '14px', 
-            color: '#1F2937', 
-            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-            lineHeight: '1.5'
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #E5E7EB'
           }}>
-            {generatedEmail}
+            {emailSections.map((section, index) => (
+              <div key={index}>
+                {section.type === 'text' ? (
+                  <div style={{ 
+                    whiteSpace: 'pre-wrap',
+                    fontSize: '14px',
+                    color: '#1F2937',
+                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                    lineHeight: '1.5',
+                    marginBottom: '8px'
+                  }}>
+                    {section.content}
+                  </div>
+                ) : (
+                  <div style={{ 
+                    textAlign: 'center',
+                    margin: '16px 0'
+                  }}>
+                    <img 
+                      src={section.src} 
+                      alt={section.alt}
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                        maxHeight: '300px',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
-
-        {/* 이미지 미리보기 섹션 */}
-        <div style={{ backgroundColor: '#F8FAFC', padding: '24px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1F2937', marginBottom: '20px' }}>📸 첨부 이미지</h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-            {/* DA 전체 이미지 */}
-            {reportData.daOverall.image && (
-              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>📊 DA 전체</h4>
-                <img 
-                  src={reportData.daOverall.image} 
-                  alt="DA 전체" 
-                  style={{ 
-                    width: '100%', 
-                    height: 'auto', 
-                    maxHeight: '200px', 
-                    objectFit: 'contain',
-                    borderRadius: '4px',
-                    border: '1px solid #E5E7EB'
-                  }} 
-                />
-              </div>
-            )}
-
-            {/* 각 매체별 이미지 */}
-            {Object.entries(reportData.mediaDetails).map(([media, data]) => (
-              data.image && (
-                <div key={media} style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
-                    {mediaList.find(m => m.id === media)?.icon} {media}
-                  </h4>
-                  <img 
-                    src={data.image} 
-                    alt={media} 
-                    style={{ 
-                      width: '100%', 
-                      height: 'auto', 
-                      maxHeight: '200px', 
-                      objectFit: 'contain',
-                      borderRadius: '4px',
-                      border: '1px solid #E5E7EB'
-                    }} 
-                  />
-                </div>
-              )
-            ))}
-
-            {/* 제휴 이미지 */}
-            {reportData.partnership.image && (
-              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '8px', border: '1px solid #E5E7EB' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>🤝 제휴</h4>
-                <img 
-                  src={reportData.partnership.image} 
-                  alt="제휴" 
-                  style={{ 
-                    width: '100%', 
-                    height: 'auto', 
-                    maxHeight: '200px', 
-                    objectFit: 'contain',
-                    borderRadius: '4px',
-                    border: '1px solid #E5E7EB'
-                  }} 
-                />
-              </div>
-            )}
-          </div>
-
-
+        
+        <div style={{ 
+          backgroundColor: '#FEF3C7', 
+          padding: '16px', 
+          borderRadius: '8px',
+          border: '1px solid #F59E0B',
+          marginTop: '16px'
+        }}>
+          <p style={{ fontSize: '14px', color: '#92400E', margin: 0 }}>
+            💡 <strong>Gmail 사용법:</strong> Gmail 열기 → 텍스트 자동 입력됨 → 필요한 이미지를 수동으로 붙여넣기 (Ctrl+V)
+          </p>
         </div>
       </div>
     </div>
