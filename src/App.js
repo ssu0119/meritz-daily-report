@@ -69,96 +69,23 @@ const DailyReportPlatform = () => {
       totalBudget: '',
       totalLeads: '',
       totalCPA: '',
-      images: [
-        { src: null, includeInEmail: false, caption: '' },
-        { src: null, includeInEmail: false, caption: '' },
-        { src: null, includeInEmail: false, caption: '' },
-        { src: null, includeInEmail: false, caption: '' }
-      ]
+      image: null
     },
     mediaDetails: {
-      '토스': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      },
-      '네이버GFA': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      },
-      '네이버NOSP': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      },
-      '카카오': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      },
-      '구글': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      },
-      '메타': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      },
-      '앱캠페인': { 
-        content: '', 
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ], 
-        noUpdate: false 
-      }
+      '토스': { content: '', image: null, noUpdate: false },
+      '네이버GFA': { content: '', image: null, noUpdate: false },
+      '네이버NOSP': { content: '', image: null, noUpdate: false },
+      '카카오': { content: '', image: null, noUpdate: false },
+      '구글': { content: '', image: null, noUpdate: false },
+      '메타': { content: '', image: null, noUpdate: false },
+      '앱캠페인': { content: '', image: null, noUpdate: false }
     },
     partnership: {
       totalBudget: '',
       totalLeads: '',
       totalCPA: '',
       details: '',
-      images: [
-        { src: null, includeInEmail: false, caption: '' },
-        { src: null, includeInEmail: false, caption: '' },
-        { src: null, includeInEmail: false, caption: '' },
-        { src: null, includeInEmail: false, caption: '' }
-      ],
+      image: null,
       weeklyPlan: ''
     },
     attachmentNote: ''
@@ -180,7 +107,6 @@ const DailyReportPlatform = () => {
   const [showTeamView, setShowTeamView] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastUpdatedBy, setLastUpdatedBy] = useState('');
-  const [popupImage, setPopupImage] = useState(null);
 
   const mediaList = [
     { id: 'DA전체', name: 'DA 전체', icon: '📊', bgColor: '#3B82F6' },
@@ -347,10 +273,12 @@ const DailyReportPlatform = () => {
   const handleDateChange = async (newDate) => {
     setIsLoading(true);
     
+    // 현재 데이터 저장
     if (reportData.date) {
       await saveToFirebase(reportData.date, reportData);
     }
     
+    // 새 날짜에 대한 데이터 불러오기
     const savedData = await loadFromFirebase(newDate);
     
     const defaultData = {
@@ -360,96 +288,23 @@ const DailyReportPlatform = () => {
         totalBudget: '',
         totalLeads: '',
         totalCPA: '',
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ]
+        image: null
       },
       mediaDetails: {
-        '토스': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '네이버GFA': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '네이버NOSP': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '카카오': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '구글': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '메타': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '앱캠페인': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        }
+        '토스': { content: '', image: null, noUpdate: false },
+        '네이버GFA': { content: '', image: null, noUpdate: false },
+        '네이버NOSP': { content: '', image: null, noUpdate: false },
+        '카카오': { content: '', image: null, noUpdate: false },
+        '구글': { content: '', image: null, noUpdate: false },
+        '메타': { content: '', image: null, noUpdate: false },
+        '앱캠페인': { content: '', image: null, noUpdate: false }
       },
       partnership: {
         totalBudget: '',
         totalLeads: '',
         totalCPA: '',
         details: '',
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ],
+        image: null,
         weeklyPlan: ''
       },
       attachmentNote: ''
@@ -474,96 +329,23 @@ const DailyReportPlatform = () => {
           totalBudget: '',
           totalLeads: '',
           totalCPA: '',
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ]
+          image: null
         },
         mediaDetails: {
-          '토스': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          },
-          '네이버GFA': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          },
-          '네이버NOSP': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          },
-          '카카오': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          },
-          '구글': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          },
-          '메타': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          },
-          '앱캠페인': { 
-            content: '', 
-            images: [
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' },
-              { src: null, includeInEmail: false, caption: '' }
-            ], 
-            noUpdate: false 
-          }
+          '토스': { content: '', image: null, noUpdate: false },
+          '네이버GFA': { content: '', image: null, noUpdate: false },
+          '네이버NOSP': { content: '', image: null, noUpdate: false },
+          '카카오': { content: '', image: null, noUpdate: false },
+          '구글': { content: '', image: null, noUpdate: false },
+          '메타': { content: '', image: null, noUpdate: false },
+          '앱캠페인': { content: '', image: null, noUpdate: false }
         },
         partnership: {
           totalBudget: '',
           totalLeads: '',
           totalCPA: '',
           details: '',
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ],
+          image: null,
           weeklyPlan: ''
         },
         attachmentNote: ''
@@ -580,6 +362,7 @@ const DailyReportPlatform = () => {
     initializeData();
   }, []);
 
+  // 자동 저장 (10초마다)
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
       if (reportData.date && !isLoading) {
@@ -594,139 +377,7 @@ const DailyReportPlatform = () => {
     return () => clearInterval(autoSaveInterval);
   }, [reportData, isLoading]);
 
-  useEffect(() => {
-    const handleEscKey = (event) => {
-      if (event.key === 'Escape' && popupImage) {
-        closePopup();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscKey);
-    return () => {
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, [popupImage]);
-
-  const handleCheckboxChange = (section, media, index, checked) => {
-    if (section === 'daOverall') {
-      setReportData(prev => ({
-        ...prev,
-        daOverall: {
-          ...prev.daOverall,
-          images: prev.daOverall.images.map((img, i) => 
-            i === index ? { ...img, includeInEmail: checked } : img
-          )
-        }
-      }));
-    } else if (section === 'mediaDetails') {
-      setReportData(prev => ({
-        ...prev,
-        mediaDetails: {
-          ...prev.mediaDetails,
-          [media]: {
-            ...prev.mediaDetails[media],
-            images: prev.mediaDetails[media].images.map((img, i) => 
-              i === index ? { ...img, includeInEmail: checked } : img
-            )
-          }
-        }
-      }));
-    } else if (section === 'partnership') {
-      setReportData(prev => ({
-        ...prev,
-        partnership: {
-          ...prev.partnership,
-          images: prev.partnership.images.map((img, i) => 
-            i === index ? { ...img, includeInEmail: checked } : img
-          )
-        }
-      }));
-    }
-  };
-
-  const handleCaptionChange = (section, media, index, caption) => {
-    if (section === 'daOverall') {
-      setReportData(prev => ({
-        ...prev,
-        daOverall: {
-          ...prev.daOverall,
-          images: prev.daOverall.images.map((img, i) => 
-            i === index ? { ...img, caption } : img
-          )
-        }
-      }));
-    } else if (section === 'mediaDetails') {
-      setReportData(prev => ({
-        ...prev,
-        mediaDetails: {
-          ...prev.mediaDetails,
-          [media]: {
-            ...prev.mediaDetails[media],
-            images: prev.mediaDetails[media].images.map((img, i) => 
-              i === index ? { ...img, caption } : img
-            )
-          }
-        }
-      }));
-    } else if (section === 'partnership') {
-      setReportData(prev => ({
-        ...prev,
-        partnership: {
-          ...prev.partnership,
-          images: prev.partnership.images.map((img, i) => 
-            i === index ? { ...img, caption } : img
-          )
-        }
-      }));
-    }
-  };
-
-  const handleImageDelete = (section, media, index) => {
-    if (section === 'daOverall') {
-      setReportData(prev => ({
-        ...prev,
-        daOverall: {
-          ...prev.daOverall,
-          images: prev.daOverall.images.map((img, i) => 
-            i === index ? { src: null, includeInEmail: false, caption: '' } : img
-          )
-        }
-      }));
-    } else if (section === 'mediaDetails') {
-      setReportData(prev => ({
-        ...prev,
-        mediaDetails: {
-          ...prev.mediaDetails,
-          [media]: {
-            ...prev.mediaDetails[media],
-            images: prev.mediaDetails[media].images.map((img, i) => 
-              i === index ? { src: null, includeInEmail: false, caption: '' } : img
-            )
-          }
-        }
-      }));
-    } else if (section === 'partnership') {
-      setReportData(prev => ({
-        ...prev,
-        partnership: {
-          ...prev.partnership,
-          images: prev.partnership.images.map((img, i) => 
-            i === index ? { src: null, includeInEmail: false, caption: '' } : img
-          )
-        }
-      }));
-    }
-  };
-
-  const handleImageClick = (imageSrc) => {
-    setPopupImage(imageSrc);
-  };
-
-  const closePopup = () => {
-    setPopupImage(null);
-  };
-
-  const handleImagePaste = (e, section, media = null, imageIndex = 0) => {
+  const handleImagePaste = (e, section, media = null) => {
     e.preventDefault();
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -738,35 +389,20 @@ const DailyReportPlatform = () => {
           if (section === 'daOverall') {
             setReportData(prev => ({
               ...prev,
-              daOverall: { 
-                ...prev.daOverall, 
-                images: prev.daOverall.images.map((img, idx) => 
-                  idx === imageIndex ? { src: imageData, includeInEmail: true, caption: img.caption || '' } : img
-                )
-              }
+              daOverall: { ...prev.daOverall, image: imageData }
             }));
           } else if (section === 'mediaDetails') {
             setReportData(prev => ({
               ...prev,
               mediaDetails: {
                 ...prev.mediaDetails,
-                [media]: { 
-                  ...prev.mediaDetails[media], 
-                  images: prev.mediaDetails[media].images.map((img, idx) => 
-                    idx === imageIndex ? { src: imageData, includeInEmail: true, caption: img.caption || '' } : img
-                  )
-                }
+                [media]: { ...prev.mediaDetails[media], image: imageData }
               }
             }));
           } else if (section === 'partnership') {
             setReportData(prev => ({
               ...prev,
-              partnership: { 
-                ...prev.partnership, 
-                images: prev.partnership.images.map((img, idx) => 
-                  idx === imageIndex ? { src: imageData, includeInEmail: true, caption: img.caption || '' } : img
-                )
-              }
+              partnership: { ...prev.partnership, image: imageData }
             }));
           }
         };
@@ -775,136 +411,6 @@ const DailyReportPlatform = () => {
       }
     }
   };
-
-  const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => (
-    <div style={{
-      border: '2px dashed #D1D5DB',
-      borderRadius: '8px',
-      padding: '12px',
-      textAlign: 'center',
-      backgroundColor: disabled ? '#F3F4F6' : '#F9FAFB',
-      position: 'relative',
-      minHeight: isLarge ? '260px' : '180px',
-      opacity: disabled ? 0.5 : 1
-    }}>
-      {image.src ? (
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ position: 'relative', flex: '1' }}>
-            <img 
-              src={image.src} 
-              alt={`${media || section} ${index + 1}`}
-              style={{ 
-                width: '100%', 
-                height: isLarge ? '120px' : '80px', 
-                objectFit: 'cover', 
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-              onClick={() => handleImageClick(image.src)}
-              title="클릭하면 확대해서 볼 수 있습니다"
-            />
-            <button
-              onClick={() => onDelete(section, media, index)}
-              style={{
-                position: 'absolute',
-                top: '4px',
-                right: '4px',
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: '#EF4444',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                zIndex: 10
-              }}
-              title="이미지 삭제"
-            >
-              ×
-            </button>
-          </div>
-          
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            fontSize: '12px',
-            padding: '4px 0'
-          }}>
-            <input 
-              type="checkbox" 
-              checked={image.includeInEmail}
-              onChange={(e) => onCheckboxChange(section, media, index, e.target.checked)}
-              style={{ marginRight: '6px', width: '14px', height: '14px' }}
-            />
-            <span style={{ color: '#374151', fontWeight: '500' }}>메일 포함</span>
-          </div>
-          
-          <div style={{ marginTop: '4px' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '11px', 
-              color: '#6B7280', 
-              marginBottom: '4px',
-              textAlign: 'left'
-            }}>
-              이미지 캡션:
-            </label>
-            <input
-              type="text"
-              value={image.caption || ''}
-              onChange={(e) => onCaptionChange(section, media, index, e.target.value)}
-              placeholder="캡션을 입력하세요 (선택사항)"
-              style={{
-                width: '100%',
-                padding: '8px',
-                fontSize: '12px',
-                border: '2px solid #D1D5DB',
-                borderRadius: '6px',
-                backgroundColor: 'white',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-        </div>
-      ) : (
-        <div 
-          style={{ 
-            height: '100%', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            cursor: disabled ? 'not-allowed' : 'pointer'
-          }}
-          onPaste={disabled ? null : (e) => onPaste(e, section, media, index)}
-          tabIndex={disabled ? -1 : 0}
-          onMouseOver={(e) => {
-            if (!disabled) {
-              e.target.style.borderColor = '#3B82F6';
-            }
-          }}
-          onMouseOut={(e) => {
-            if (!disabled) {
-              e.target.style.borderColor = '#D1D5DB';
-            }
-          }}
-        >
-          <div style={{ fontSize: isLarge ? '40px' : '30px', marginBottom: '12px', opacity: 0.5 }}>🖼️</div>
-          <p style={{ fontSize: '14px', color: '#6B7280', margin: '4px 0', fontWeight: '500' }}>이미지 {index + 1}</p>
-          <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>
-            {disabled ? '특이사항 없음' : 'Ctrl+V로 붙여넣기'}
-          </p>
-        </div>
-      )}
-    </div>
-  );
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -971,147 +477,6 @@ const DailyReportPlatform = () => {
     emailContent += `감사합니다.\n${senderName} 드림`;
     
     return emailContent;
-  };
-
-  const generateEmailWithImages = () => {
-    const formattedDate = formatDate(reportData.date);
-    const senderName = reportData.senderName || '박희수';
-    
-    const emailSections = [];
-    
-    emailSections.push({
-      type: 'text',
-      content: `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`
-    });
-    
-    if (reportData.attachmentNote.trim()) {
-      emailSections.push({
-        type: 'text',
-        content: `${reportData.attachmentNote}\n\n`
-      });
-    } else {
-      emailSections.push({
-        type: 'text',
-        content: `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`
-      });
-    }
-    
-    emailSections.push({
-      type: 'text',
-      content: `* DA 파트\n[전체]\n`
-    });
-    
-    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
-      emailSections.push({
-        type: 'text',
-        content: `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`
-      });
-    }
-    
-    reportData.daOverall.images.forEach((image, index) => {
-      if (image.src && image.includeInEmail) {
-        if (image.caption && image.caption.trim()) {
-          emailSections.push({
-            type: 'text',
-            content: `▼ ${image.caption}\n`
-          });
-        }
-        emailSections.push({
-          type: 'image',
-          src: image.src,
-          alt: `DA 전체 성과 ${index + 1}`
-        });
-      }
-    });
-    
-    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
-    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
-    
-    if (hasMediaContent) {
-      emailSections.push({
-        type: 'text',
-        content: `[미디어 상세]\n`
-      });
-      
-      let mediaCount = 0;
-      mediaOrder.forEach(media => {
-        const data = reportData.mediaDetails[media];
-        if (data?.content?.trim()) {
-          mediaCount++;
-          emailSections.push({
-            type: 'text',
-            content: `${mediaCount}. ${media}\n${data.content}\n\n`
-          });
-          
-          data.images.forEach((image, index) => {
-            if (image.src && image.includeInEmail) {
-              if (image.caption && image.caption.trim()) {
-                emailSections.push({
-                  type: 'text',
-                  content: `▼ ${image.caption}\n`
-                });
-              }
-              emailSections.push({
-                type: 'image',
-                src: image.src,
-                alt: `${media} 성과 ${index + 1}`
-              });
-            }
-          });
-        }
-      });
-    }
-    
-    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
-      emailSections.push({
-        type: 'text',
-        content: `* 제휴 파트\n`
-      });
-      
-      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
-        emailSections.push({
-          type: 'text',
-          content: `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`
-        });
-      }
-      
-      if (reportData.partnership.details?.trim()) {
-        emailSections.push({
-          type: 'text',
-          content: `${reportData.partnership.details}\n\n`
-        });
-      }
-      
-      reportData.partnership.images.forEach((image, index) => {
-        if (image.src && image.includeInEmail) {
-          if (image.caption && image.caption.trim()) {
-            emailSections.push({
-              type: 'text',
-              content: `▼ ${image.caption}\n`
-            });
-          }
-          emailSections.push({
-            type: 'image',
-            src: image.src,
-            alt: `제휴 성과 ${index + 1}`
-          });
-        }
-      });
-    }
-    
-    if (reportData.partnership.weeklyPlan?.trim()) {
-      emailSections.push({
-        type: 'text',
-        content: `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`
-      });
-    }
-    
-    emailSections.push({
-      type: 'text',
-      content: `감사합니다.\n${senderName} 드림`
-    });
-    
-    return emailSections;
   };
 
   useEffect(() => {
@@ -1200,96 +565,23 @@ const DailyReportPlatform = () => {
         totalBudget: '',
         totalLeads: '',
         totalCPA: '',
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ]
+        image: null
       },
       mediaDetails: {
-        '토스': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '네이버GFA': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '네이버NOSP': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '카카오': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '구글': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '메타': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '앱캠페인': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        }
+        '토스': { content: '', image: null, noUpdate: false },
+        '네이버GFA': { content: '', image: null, noUpdate: false },
+        '네이버NOSP': { content: '', image: null, noUpdate: false },
+        '카카오': { content: '', image: null, noUpdate: false },
+        '구글': { content: '', image: null, noUpdate: false },
+        '메타': { content: '', image: null, noUpdate: false },
+        '앱캠페인': { content: '', image: null, noUpdate: false }
       },
       partnership: {
         totalBudget: '',
         totalLeads: '',
         totalCPA: '',
         details: '',
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ],
+        image: null,
         weeklyPlan: ''
       },
       attachmentNote: ''
@@ -1695,165 +987,278 @@ const DailyReportPlatform = () => {
     );
   }
 
-  if (currentMedia === '미리보기') {
-    const emailSections = generateEmailWithImages();
+  // 미리보기 화면 부분만 수정 (App.js에서 해당 부분 교체)
 
-    return (
-      <div style={styles.container}>
-        <div style={styles.mainCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button
-                onClick={() => setCurrentMedia('')}
-                style={{
-                  ...styles.button,
-                  backgroundColor: '#F3F4F6',
-                  color: '#374151',
-                  padding: '8px 12px',
-                  marginRight: '16px'
-                }}
-              >
-                ←
-              </button>
-              <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>메일 미리보기</h1>
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={saveToGmailDrafts}
-                disabled={isGmailLoading}
-                style={{
-                  ...styles.button,
-                  backgroundColor: gmailSaveSuccess ? '#10B981' : isGmailLoading ? '#9CA3AF' : '#DC2626',
-                  color: 'white',
-                  cursor: isGmailLoading ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {isGmailLoading ? (
-                  <>
-                    <div style={{ 
-                      width: '16px', 
-                      height: '16px', 
-                      border: '2px solid white', 
-                      borderTop: '2px solid transparent', 
-                      borderRadius: '50%', 
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
-                    처리중...
-                  </>
-                ) : gmailSaveSuccess ? (
-                  <>
-                    <span>✅</span>
-                    Gmail 열림!
-                  </>
-                ) : (
-                  <>
-                    <span>📧</span>
-                    Gmail 임시보관함
-                  </>
-                )}
-              </button>
-              <button
-                onClick={copyEmailToClipboard}
-                style={{
-                  ...styles.button,
-                  backgroundColor: copySuccess ? '#10B981' : '#3B82F6',
-                  color: 'white'
-                }}
-              >
-                <span>{copySuccess ? '✅' : '📋'}</span>
-                {copySuccess ? '복사됨!' : '복사'}
-              </button>
-            </div>
-          </div>
+// App.js에서 미리보기 부분만 교체하세요
+
+if (currentMedia === '미리보기') {
+  // 이미지 포함 이메일 섹션 생성
+  const generateEmailWithImages = () => {
+    const formattedDate = formatDate(reportData.date);
+    const senderName = reportData.senderName || '박희수';
+    
+    const emailSections = [];
+    
+    // 인사말
+    emailSections.push({
+      type: 'text',
+      content: `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`
+    });
+    
+    if (reportData.attachmentNote.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `${reportData.attachmentNote}\n\n`
+      });
+    } else {
+      emailSections.push({
+        type: 'text',
+        content: `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`
+      });
+    }
+    
+    // DA 파트
+    emailSections.push({
+      type: 'text',
+      content: `* DA 파트\n[전체]\n`
+    });
+    
+    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
+      emailSections.push({
+        type: 'text',
+        content: `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`
+      });
+    }
+    
+    // DA 전체 이미지
+    if (reportData.daOverall.image) {
+      emailSections.push({
+        type: 'image',
+        src: reportData.daOverall.image,
+        alt: 'DA 전체 성과'
+      });
+    }
+    
+    // 미디어 상세
+    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
+    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
+    
+    if (hasMediaContent) {
+      emailSections.push({
+        type: 'text',
+        content: `[미디어 상세]\n`
+      });
+      
+      let mediaCount = 0;
+      mediaOrder.forEach(media => {
+        const data = reportData.mediaDetails[media];
+        if (data?.content?.trim()) {
+          mediaCount++;
+          emailSections.push({
+            type: 'text',
+            content: `${mediaCount}. ${media}\n${data.content}\n\n`
+          });
           
-          <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
-            <div style={{ marginBottom: '16px', padding: '16px', backgroundColor: '#DBEAFE', borderRadius: '8px' }}>
-              <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>받는사람:</strong> 박영빈님/TM마케팅파트 &lt;yb.park@meritz.co.kr&gt;
-              </p>
-              <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>참조:</strong> 김윤희님/TM마케팅파트, 이원진/리더/TM마케팅파트, echo_메리츠다이렉트, 디트라이브_팀메일
-              </p>
-              <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>제목:</strong> [에코/장기TM/DA] 메리츠화재 데일리보고_25년 {formatEmailDate(reportData.date)}
-              </p>
-            </div>
-            
-            <div style={{ 
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '8px',
-              border: '1px solid #E5E7EB'
-            }}>
-              {emailSections.map((section, index) => (
-                <div key={index}>
-                  {section.type === 'text' ? (
-                    <div style={{ 
-                      whiteSpace: 'pre-wrap',
-                      fontSize: '14px',
-                      color: '#1F2937',
-                      fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-                      lineHeight: '1.5',
-                      marginBottom: '8px',
-                      fontWeight: (
-                        section.content.includes('* DA 파트') ||
-                        section.content.includes('[전체]') ||
-                        section.content.includes('[미디어 상세]') ||
-                        section.content.includes('[금주 MKT 플랜]') ||
-                        /^\d+\.\s[가-힣]+\n/.test(section.content)
-                      ) ? 'bold' : 'normal'
-                    }}>
-                      {/^\d+\.\s[가-힣]+\n/.test(section.content) ? (
-                        <span>
-                          <span style={{ fontWeight: 'bold' }}>
-                            {section.content.split('\n')[0]}
-                          </span>
-                          <br />
-                          <span style={{ fontWeight: 'normal' }}>
-                            {section.content.split('\n').slice(1).join('\n')}
-                          </span>
-                        </span>
-                      ) : (
-                        section.content
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ 
-                      textAlign: 'center',
-                      margin: '16px 0'
-                    }}>
-                      <img 
-                        src={section.src} 
-                        alt={section.alt}
-                        style={{
-                          maxWidth: '100%',
-                          height: 'auto',
-                          maxHeight: '300px',
-                          borderRadius: '4px'
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          // 각 미디어별 이미지 추가
+          if (data.image) {
+            emailSections.push({
+              type: 'image',
+              src: data.image,
+              alt: `${media} 성과`
+            });
+          }
+        }
+      });
+    }
+    
+    // 제휴 파트
+    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `* 제휴 파트\n`
+      });
+      
+      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
+        emailSections.push({
+          type: 'text',
+          content: `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`
+        });
+      }
+      
+      if (reportData.partnership.details?.trim()) {
+        emailSections.push({
+          type: 'text',
+          content: `${reportData.partnership.details}\n\n`
+        });
+      }
+      
+      // 제휴 이미지 추가
+      if (reportData.partnership.image) {
+        emailSections.push({
+          type: 'image',
+          src: reportData.partnership.image,
+          alt: '제휴 성과'
+        });
+      }
+    }
+    
+    // 금주 MKT 플랜
+    if (reportData.partnership.weeklyPlan?.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`
+      });
+    }
+    
+    // 마무리 인사
+    emailSections.push({
+      type: 'text',
+      content: `감사합니다.\n${senderName} 드림`
+    });
+    
+    return emailSections;
+  };
+
+  const emailSections = generateEmailWithImages();
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.mainCard}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              onClick={() => setCurrentMedia('')}
+              style={{
+                ...styles.button,
+                backgroundColor: '#F3F4F6',
+                color: '#374151',
+                padding: '8px 12px',
+                marginRight: '16px'
+              }}
+            >
+              ←
+            </button>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>메일 미리보기</h1>
           </div>
-          
-          <div style={{ 
-            backgroundColor: '#FEF3C7', 
-            padding: '16px', 
-            borderRadius: '8px',
-            border: '1px solid #F59E0B',
-            marginTop: '16px'
-          }}>
-            <p style={{ fontSize: '14px', color: '#92400E', margin: 0 }}>
-              💡 <strong>Gmail 사용법:</strong> Gmail 열기 → 텍스트 자동 입력됨 → 필요한 이미지를 수동으로 붙여넣기 (Ctrl+V)
-            </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={saveToGmailDrafts}
+              disabled={isGmailLoading}
+              style={{
+                ...styles.button,
+                backgroundColor: gmailSaveSuccess ? '#10B981' : isGmailLoading ? '#9CA3AF' : '#DC2626',
+                color: 'white',
+                cursor: isGmailLoading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {isGmailLoading ? (
+                <>
+                  <div style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid white', 
+                    borderTop: '2px solid transparent', 
+                    borderRadius: '50%', 
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  처리중...
+                </>
+              ) : gmailSaveSuccess ? (
+                <>
+                  <span>✅</span>
+                  Gmail 열림!
+                </>
+              ) : (
+                <>
+                  <span>📧</span>
+                  Gmail 임시보관함
+                </>
+              )}
+            </button>
+            <button
+              onClick={copyEmailToClipboard}
+              style={{
+                ...styles.button,
+                backgroundColor: copySuccess ? '#10B981' : '#3B82F6',
+                color: 'white'
+              }}
+            >
+              <span>{copySuccess ? '✅' : '📋'}</span>
+              {copySuccess ? '복사됨!' : '복사'}
+            </button>
           </div>
         </div>
+        
+        <div style={{ backgroundColor: '#F9FAFB', padding: '24px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
+          <div style={{ marginBottom: '16px', padding: '16px', backgroundColor: '#DBEAFE', borderRadius: '8px' }}>
+            <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
+              <strong>받는사람:</strong> 박영빈님/TM마케팅파트 &lt;yb.park@meritz.co.kr&gt;
+            </p>
+            <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
+              <strong>참조:</strong> 김윤희님/TM마케팅파트, 이원진/리더/TM마케팅파트, echo_메리츠다이렉트, 디트라이브_팀메일
+            </p>
+            <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
+              <strong>제목:</strong> [에코/장기TM/DA] 메리츠화재 데일리보고_25년 {formatEmailDate(reportData.date)}
+            </p>
+          </div>
+          
+          {/* 메일 내용 + 이미지 */}
+          <div style={{ 
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #E5E7EB'
+          }}>
+            {emailSections.map((section, index) => (
+              <div key={index}>
+                {section.type === 'text' ? (
+                  <div style={{ 
+                    whiteSpace: 'pre-wrap',
+                    fontSize: '14px',
+                    color: '#1F2937',
+                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                    lineHeight: '1.5',
+                    marginBottom: '8px'
+                  }}>
+                    {section.content}
+                  </div>
+                ) : (
+                  <div style={{ 
+                    textAlign: 'center',
+                    margin: '16px 0'
+                  }}>
+                    <img 
+                      src={section.src} 
+                      alt={section.alt}
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                        maxHeight: '300px',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div style={{ 
+          backgroundColor: '#FEF3C7', 
+          padding: '16px', 
+          borderRadius: '8px',
+          border: '1px solid #F59E0B',
+          marginTop: '16px'
+        }}>
+          <p style={{ fontSize: '14px', color: '#92400E', margin: 0 }}>
+            💡 <strong>Gmail 사용법:</strong> Gmail 열기 → 텍스트 자동 입력됨 → 필요한 이미지를 수동으로 붙여넣기 (Ctrl+V)
+          </p>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div style={styles.container}>
@@ -1935,38 +1340,33 @@ const DailyReportPlatform = () => {
             </div>
             
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '16px' }}>성과 이미지 (최대 4장)</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-                  <ImageUploadSlot
-                    image={reportData.daOverall.images[0]}
-                    onDelete={handleImageDelete}
-                    onCheckboxChange={handleCheckboxChange}
-                    onCaptionChange={handleCaptionChange}
-                    onPaste={handleImagePaste}
-                    section="daOverall"
-                    media={null}
-                    index={0}
-                    isLarge={true}
-                  />
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  {[1, 2, 3].map(index => (
-                    <ImageUploadSlot
-                      key={index}
-                      image={reportData.daOverall.images[index]}
-                      onDelete={handleImageDelete}
-                      onCheckboxChange={handleCheckboxChange}
-                      onCaptionChange={handleCaptionChange}
-                      onPaste={handleImagePaste}
-                      section="daOverall"
-                      media={null}
-                      index={index}
-                      isLarge={false}
-                    />
-                  ))}
-                </div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>전체 성과 이미지</label>
+              <div
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  border: '2px dashed #D1D5DB',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  backgroundColor: '#F9FAFB',
+                  transition: 'all 0.2s'
+                }}
+                onPaste={(e) => handleImagePaste(e, 'daOverall')}
+                tabIndex={0}
+                onMouseOver={(e) => e.target.style.borderColor = '#3B82F6'}
+                onMouseOut={(e) => e.target.style.borderColor = '#D1D5DB'}
+              >
+                {reportData.daOverall.image ? (
+                  <img src={reportData.daOverall.image} alt="전체 성과" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🖼️</div>
+                    <p style={{ color: '#6B7280', fontSize: '14px' }}>이미지를 복사한 후 여기에 붙여넣기 (Ctrl+V)</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1988,7 +1388,7 @@ const DailyReportPlatform = () => {
           </div>
         )}
 
-        {currentMedia !== 'DA전체' && currentMedia !== '제휴' && currentMedia !== '미리보기' && (
+        {currentMedia !== 'DA전체' && currentMedia !== '제휴' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
               <input
@@ -2047,40 +1447,41 @@ const DailyReportPlatform = () => {
             </div>
             
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '16px' }}>매체 이미지 (최대 4장)</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-                  <ImageUploadSlot
-                    image={reportData.mediaDetails[currentMedia]?.images[0]}
-                    onDelete={handleImageDelete}
-                    onCheckboxChange={handleCheckboxChange}
-                    onCaptionChange={handleCaptionChange}
-                    onPaste={handleImagePaste}
-                    section="mediaDetails"
-                    media={currentMedia}
-                    index={0}
-                    isLarge={true}
-                    disabled={reportData.mediaDetails[currentMedia]?.noUpdate}
-                  />
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  {[1, 2, 3].map(index => (
-                    <ImageUploadSlot
-                      key={index}
-                      image={reportData.mediaDetails[currentMedia]?.images[index]}
-                      onDelete={handleImageDelete}
-                      onCheckboxChange={handleCheckboxChange}
-                      onCaptionChange={handleCaptionChange}
-                      onPaste={handleImagePaste}
-                      section="mediaDetails"
-                      media={currentMedia}
-                      index={index}
-                      isLarge={false}
-                      disabled={reportData.mediaDetails[currentMedia]?.noUpdate}
-                    />
-                  ))}
-                </div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>매체 이미지</label>
+              <div
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  border: '2px dashed #D1D5DB',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: reportData.mediaDetails[currentMedia]?.noUpdate ? 'not-allowed' : 'pointer',
+                  backgroundColor: reportData.mediaDetails[currentMedia]?.noUpdate ? '#F9FAFB' : '#F9FAFB',
+                  transition: 'all 0.2s'
+                }}
+                onPaste={reportData.mediaDetails[currentMedia]?.noUpdate ? null : (e) => handleImagePaste(e, 'mediaDetails', currentMedia)}
+                tabIndex={reportData.mediaDetails[currentMedia]?.noUpdate ? -1 : 0}
+              >
+                {reportData.mediaDetails[currentMedia]?.image ? (
+                  <img src={reportData.mediaDetails[currentMedia].image} alt={currentMedia} style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      fontSize: '48px', 
+                      marginBottom: '16px',
+                      opacity: reportData.mediaDetails[currentMedia]?.noUpdate ? 0.3 : 1
+                    }}>🖼️</div>
+                    <p style={{ 
+                      color: '#6B7280', 
+                      fontSize: '14px',
+                      opacity: reportData.mediaDetails[currentMedia]?.noUpdate ? 0.5 : 1
+                    }}>
+                      {reportData.mediaDetails[currentMedia]?.noUpdate ? '특이사항 없음' : '이미지를 복사한 후 여기에 붙여넣기 (Ctrl+V)'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2169,108 +1570,34 @@ const DailyReportPlatform = () => {
             </div>
             
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '16px' }}>제휴 이미지 (최대 4장)</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
-                  <ImageUploadSlot
-                    image={reportData.partnership.images[0]}
-                    onDelete={handleImageDelete}
-                    onCheckboxChange={handleCheckboxChange}
-                    onCaptionChange={handleCaptionChange}
-                    onPaste={handleImagePaste}
-                    section="partnership"
-                    media={null}
-                    index={0}
-                    isLarge={true}
-                  />
-                </div>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  {[1, 2, 3].map(index => (
-                    <ImageUploadSlot
-                      key={index}
-                      image={reportData.partnership.images[index]}
-                      onDelete={handleImageDelete}
-                      onCheckboxChange={handleCheckboxChange}
-                      onCaptionChange={handleCaptionChange}
-                      onPaste={handleImagePaste}
-                      section="partnership"
-                      media={null}
-                      index={index}
-                      isLarge={false}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {popupImage && (
-          <div 
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999,
-              cursor: 'pointer'
-            }}
-            onClick={closePopup}
-          >
-            <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
-              <img 
-                src={popupImage}
-                alt="확대 보기"
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>제휴 이미지</label>
+              <div
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
+                  width: '100%',
+                  height: '200px',
+                  border: '2px dashed #D1D5DB',
                   borderRadius: '8px',
-                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                }}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closePopup();
-                }}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '18px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 'bold'
+                  cursor: 'pointer',
+                  backgroundColor: '#F9FAFB',
+                  transition: 'all 0.2s'
                 }}
-                title="닫기"
+                onPaste={(e) => handleImagePaste(e, 'partnership')}
+                tabIndex={0}
+                onMouseOver={(e) => e.target.style.borderColor = '#3B82F6'}
+                onMouseOut={(e) => e.target.style.borderColor = '#D1D5DB'}
               >
-                ×
-              </button>
-            </div>
-            <div style={{
-              position: 'absolute',
-              bottom: '20px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              color: 'white',
-              fontSize: '14px',
-              opacity: 0.8
-            }}>
-              클릭하거나 ESC를 눌러 닫기
+                {reportData.partnership.image ? (
+                  <img src={reportData.partnership.image} alt="제휴" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🖼️</div>
+                    <p style={{ color: '#6B7280', fontSize: '14px' }}>이미지를 복사한 후 여기에 붙여넣기 (Ctrl+V)</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
