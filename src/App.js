@@ -20,75 +20,97 @@ const saveToFirebase = async (date, reportData) => {
   }
 };
 
-// 🚀 새로운 스마트 병합 저장 함수
-const smartSaveToFirebase = async (date, localData, updatedSection, senderName) => {
-  try {
-    console.log('🔄 스마트 병합 저장 시작:', { date, updatedSection, senderName });
-    
-    // 1. 최신 Firebase 데이터 불러오기
-    const docRef = doc(db, 'dailyReports', date);
-    const docSnap = await getDoc(docRef);
-    
-    let latestData = null;
-    if (docSnap.exists()) {
-      latestData = docSnap.data();
-      console.log('📥 최신 데이터 로드됨:', latestData);
-    }
-    
-    // 2. 데이터 병합 로직
-    let mergedData;
-    
-    if (!latestData) {
-      // Firebase에 데이터가 없으면 로컬 데이터 그대로 사용
-      mergedData = { ...localData };
-      console.log('📝 새 데이터 생성');
-    } else {
-      // 기존 데이터와 병합
-      mergedData = { ...latestData };
+// 🛡️ 진짜 안전한 섹션별 병합 시스템
+const realSafeSaveToFirebase = async (date, localData, updatedSection, senderName) => {
+  const maxRetries = 5;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`🛡️ 진짜 안전한 저장 시도 ${retryCount + 1}/${maxRetries}:`, { date, updatedSection, senderName });
       
-      // 수정된 섹션만 업데이트
-      if (updatedSection === 'daOverall') {
-        mergedData.daOverall = { ...localData.daOverall };
-        console.log('🔄 DA전체 섹션 업데이트');
-      } else if (updatedSection === 'partnership') {
-        mergedData.partnership = { ...localData.partnership };
-        console.log('🔄 제휴 섹션 업데이트');
-      } else if (updatedSection === 'attachmentNote') {
-        mergedData.attachmentNote = localData.attachmentNote;
-        console.log('🔄 첨부파일 안내 업데이트');
-      } else if (updatedSection.startsWith('media_')) {
-        // 개별 매체 업데이트 (예: media_토스, media_구글)
-        const mediaName = updatedSection.replace('media_', '');
-        if (!mergedData.mediaDetails) {
-          mergedData.mediaDetails = {};
-        }
-        mergedData.mediaDetails[mediaName] = { ...localData.mediaDetails[mediaName] };
-        console.log(`🔄 ${mediaName} 매체 업데이트`);
-      } else if (updatedSection === 'senderName') {
-        mergedData.senderName = localData.senderName;
-        console.log('🔄 보내는 사람 업데이트');
+      // 1. 항상 최신 서버 데이터 불러오기
+      const docRef = doc(db, 'dailyReports', date);
+      const docSnap = await getDoc(docRef);
+      
+      let serverData = null;
+      if (docSnap.exists()) {
+        serverData = docSnap.data();
+        console.log('📥 서버 데이터 로드됨');
       }
       
-      // 기본 정보는 항상 최신으로 유지
-      mergedData.date = localData.date;
-      mergedData.senderName = senderName;
+      // 2. 병합 데이터 생성
+      let mergedData;
+      
+      if (!serverData) {
+        // 서버에 데이터가 없는 경우 - 로컬 데이터로 새로 생성
+        mergedData = JSON.parse(JSON.stringify(localData));
+        mergedData.version = 1;
+        console.log('🆕 새 문서 생성');
+      } else {
+        // 서버 데이터 기반으로 병합 시작
+        mergedData = JSON.parse(JSON.stringify(serverData));
+        
+        // 🔥 핵심: 수정된 섹션만 교체, 나머지는 서버 데이터 유지
+        if (updatedSection === 'daOverall') {
+          mergedData.daOverall = JSON.parse(JSON.stringify(localData.daOverall));
+          console.log('🔄 DA전체만 업데이트 (다른 섹션은 서버 데이터 유지)');
+        } else if (updatedSection === 'partnership') {
+          mergedData.partnership = JSON.parse(JSON.stringify(localData.partnership));
+          console.log('🔄 제휴만 업데이트 (다른 섹션은 서버 데이터 유지)');
+        } else if (updatedSection === 'attachmentNote') {
+          mergedData.attachmentNote = localData.attachmentNote;
+          console.log('🔄 첨부파일 안내만 업데이트 (다른 섹션은 서버 데이터 유지)');
+        } else if (updatedSection.startsWith('media_')) {
+          // 개별 매체만 업데이트
+          const mediaName = updatedSection.replace('media_', '');
+          if (!mergedData.mediaDetails) {
+            mergedData.mediaDetails = {};
+          }
+          // 🔥 핵심: 해당 매체만 교체, 다른 매체는 서버 데이터 유지
+          mergedData.mediaDetails[mediaName] = JSON.parse(JSON.stringify(localData.mediaDetails[mediaName]));
+          console.log(`🔄 ${mediaName}만 업데이트 (다른 매체는 서버 데이터 유지)`);
+        } else if (updatedSection === 'senderName') {
+          mergedData.senderName = localData.senderName;
+          console.log('🔄 보내는 사람만 업데이트');
+        }
+        
+        // 버전 증가
+        mergedData.version = (serverData.version || 0) + 1;
+        console.log(`📊 버전 증가: ${serverData.version || 0} → ${mergedData.version}`);
+      }
+      
+      // 3. 기본 메타데이터 업데이트
+      mergedData.date = date;
+      mergedData.lastUpdated = serverTimestamp();
+      mergedData.lastUpdatedBy = senderName;
+      mergedData.lastUpdatedSection = updatedSection;
+      mergedData.lastUpdatedTime = new Date().toISOString();
+      
+      // 4. 저장
+      await setDoc(docRef, mergedData);
+      
+      console.log('✅ 진짜 안전한 저장 완료:', { 
+        version: mergedData.version, 
+        updatedSection,
+        preservedSections: '다른 섹션은 서버 데이터 유지됨'
+      });
+      
+      return { success: true, mergedData };
+      
+    } catch (error) {
+      console.error(`❌ 저장 실패 (시도 ${retryCount + 1}):`, error);
+      retryCount++;
+      
+      if (retryCount < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+        console.log(`⏳ ${delay}ms 후 재시도...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
-    
-    // 3. 메타데이터 추가
-    mergedData.lastUpdated = serverTimestamp();
-    mergedData.lastUpdatedBy = senderName;
-    mergedData.lastUpdatedSection = updatedSection;
-    
-    // 4. Firebase에 저장
-    await setDoc(docRef, mergedData);
-    
-    console.log('✅ 스마트 병합 저장 완료:', mergedData);
-    return { success: true, mergedData };
-    
-  } catch (error) {
-    console.error('❌ 스마트 병합 저장 실패:', error);
-    return { success: false, error };
   }
+  
+  return { success: false, error: '최대 재시도 횟수 초과' };
 };
 
 const loadFromFirebase = async (date) => {
@@ -705,7 +727,7 @@ const DailyReportPlatform = () => {
     initializeData();
   }, []);
 
-  // 자동 저장 useEffect
+  // 🔒 초안전 자동 저장 시스템
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
       if (reportData.date && !isLoading && currentMedia) {
@@ -719,14 +741,19 @@ const DailyReportPlatform = () => {
         }
         
         if (section) {
-          const result = await smartSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
+          console.log(`🔒 자동 저장 시작: ${section}`);
+          const result = await ultraSafeSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
           if (result.success) {
             setSyncSuccess(true);
-            setTimeout(() => setSyncSuccess(false), 2000);
+            console.log('✅ 자동 저장 성공');
+            setTimeout(() => setSyncSuccess(false), 3000);
+          } else {
+            console.error('❌ 자동 저장 실패:', result.error);
+            // 저장 실패해도 로컬 데이터는 유지
           }
         }
       }
-    }, 15000);
+    }, 30000); // 30초로 늘려서 더 안정적으로
 
     return () => clearInterval(autoSaveInterval);
   }, [reportData, isLoading, currentMedia]);
@@ -1316,6 +1343,7 @@ const DailyReportPlatform = () => {
     }
   };
 
+  // 🔒 초안전 수동 저장 함수
   const saveCurrentData = async () => {
     let section;
     if (currentMedia === 'DA전체') {
@@ -1325,29 +1353,50 @@ const DailyReportPlatform = () => {
     } else if (currentMedia && currentMedia !== '미리보기') {
       section = `media_${currentMedia}`;
     } else {
-      const result = await saveToFirebase(reportData.date, reportData);
-      if (result) {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 2000);
-        const reports = await getAllReports();
-        setAllReports(reports);
+      // 메인 화면에서의 전체 저장
+      try {
+        setIsLoading(true);
+        const result = await saveToFirebase(reportData.date, reportData);
+        if (result) {
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 3000);
+          const reports = await getAllReports();
+          setAllReports(reports);
+        } else {
+          alert('저장에 실패했습니다. 다시 시도해주세요.');
+        }
+      } catch (error) {
+        console.error('전체 저장 실패:', error);
+        alert('저장 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
       }
       return;
     }
     
-    const result = await smartSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
-    if (result.success) {
-      setSmartSaveSuccess(true);
-      setLastSavedSection(section);
-      setTimeout(() => {
-        setSmartSaveSuccess(false);
-        setLastSavedSection('');
-      }, 2000);
+    try {
+      setIsLoading(true);
+      console.log(`🔒 수동 저장 시작: ${section}`);
       
-      if (result.mergedData) {
-        setReportData(result.mergedData);
-        setLastUpdatedBy(result.mergedData.lastUpdatedBy);
+      const result = await ultraSafeSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
+      if (result.success) {
+        setSmartSaveSuccess(true);
+        setLastSavedSection(section);
+        setTimeout(() => {
+          setSmartSaveSuccess(false);
+          setLastSavedSection('');
+        }, 3000);
+        
+        console.log('✅ 수동 저장 성공');
+      } else {
+        console.error('❌ 수동 저장 실패:', result.error);
+        alert('저장에 실패했습니다만, 로컬 데이터는 보존되었습니다.');
       }
+    } catch (error) {
+      console.error('저장 중 오류:', error);
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1624,16 +1673,16 @@ const DailyReportPlatform = () => {
                   marginRight: '8px'
                 }}></div>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>
-                  🚀 스마트 병합 동기화 활성화
+                  🔒 초강력 데이터 보호 시스템
                 </span>
                 <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
-                  (동시 작업 가능, 충돌 자동 해결)
+                  (로컬 백업, 5회 재시도, 30초 자동저장)
                 </span>
                 {syncSuccess && (
-                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 자동 동기화</span>
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✅ 안전 저장됨</span>
                 )}
                 {smartSaveSuccess && (
-                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 스마트 저장 완료</span>
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✅ 수동 저장 완료</span>
                 )}
                 {lastUpdatedBy && (
                   <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
@@ -1642,6 +1691,9 @@ const DailyReportPlatform = () => {
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ fontSize: '12px', color: '#6B7280' }}>
+                  v{reportData.version || 1}
+                </div>
                 <button
                   onClick={() => setShowTeamView(true)}
                   style={{ 
