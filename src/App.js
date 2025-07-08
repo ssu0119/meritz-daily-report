@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 
-// Firebase 실제 연동 함수들
+// Firebase 기본 저장 함수
 const saveToFirebase = async (date, reportData) => {
   try {
     const docRef = doc(db, 'dailyReports', date);
@@ -727,7 +727,7 @@ const DailyReportPlatform = () => {
     initializeData();
   }, []);
 
-  // 🔒 초안전 자동 저장 시스템
+  // 🛡️ 진짜 안전한 자동 저장 시스템
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
       if (reportData.date && !isLoading && currentMedia) {
@@ -741,19 +741,18 @@ const DailyReportPlatform = () => {
         }
         
         if (section) {
-          console.log(`🔒 자동 저장 시작: ${section}`);
-          const result = await ultraSafeSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
+          console.log(`🛡️ 자동 저장 시작: ${section} (다른 섹션은 보존)`);
+          const result = await realSafeSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
           if (result.success) {
             setSyncSuccess(true);
-            console.log('✅ 자동 저장 성공');
+            console.log('✅ 자동 저장 성공 - 다른 팀원 데이터 보존됨');
             setTimeout(() => setSyncSuccess(false), 3000);
           } else {
             console.error('❌ 자동 저장 실패:', result.error);
-            // 저장 실패해도 로컬 데이터는 유지
           }
         }
       }
-    }, 30000); // 30초로 늘려서 더 안정적으로
+    }, 25000); // 25초
 
     return () => clearInterval(autoSaveInterval);
   }, [reportData, isLoading, currentMedia]);
@@ -1343,7 +1342,7 @@ const DailyReportPlatform = () => {
     }
   };
 
-  // 🔒 초안전 수동 저장 함수
+  // 🛡️ 진짜 안전한 수동 저장 함수
   const saveCurrentData = async () => {
     let section;
     if (currentMedia === 'DA전체') {
@@ -1376,9 +1375,9 @@ const DailyReportPlatform = () => {
     
     try {
       setIsLoading(true);
-      console.log(`🔒 수동 저장 시작: ${section}`);
+      console.log(`🛡️ 수동 저장 시작: ${section} (다른 섹션은 보존)`);
       
-      const result = await ultraSafeSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
+      const result = await realSafeSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
       if (result.success) {
         setSmartSaveSuccess(true);
         setLastSavedSection(section);
@@ -1387,10 +1386,10 @@ const DailyReportPlatform = () => {
           setLastSavedSection('');
         }, 3000);
         
-        console.log('✅ 수동 저장 성공');
+        console.log('✅ 수동 저장 성공 - 다른 팀원 데이터 보존됨');
       } else {
         console.error('❌ 수동 저장 실패:', result.error);
-        alert('저장에 실패했습니다만, 로컬 데이터는 보존되었습니다.');
+        alert('저장에 실패했습니다. 다시 시도해주세요.');
       }
     } catch (error) {
       console.error('저장 중 오류:', error);
@@ -1673,16 +1672,16 @@ const DailyReportPlatform = () => {
                   marginRight: '8px'
                 }}></div>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>
-                  🔒 초강력 데이터 보호 시스템
+                  🛡️ 진짜 안전한 섹션별 병합
                 </span>
                 <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
-                  (로컬 백업, 5회 재시도, 30초 자동저장)
+                  (A가 토스 쓰고, B가 구글 써도 서로 안 날아감!)
                 </span>
                 {syncSuccess && (
-                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✅ 안전 저장됨</span>
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✅ 팀원 데이터 보존됨</span>
                 )}
                 {smartSaveSuccess && (
-                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✅ 수동 저장 완료</span>
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✅ 안전 저장 완료</span>
                 )}
                 {lastUpdatedBy && (
                   <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
@@ -2114,8 +2113,8 @@ const DailyReportPlatform = () => {
             }}
             disabled={isLoading}
           >
-            <span>🚀</span>
-            {smartSaveSuccess ? '스마트 저장됨!' : '스마트 저장'}
+            <span>🛡️</span>
+            {smartSaveSuccess ? '안전 저장됨!' : '안전 저장'}
           </button>
         </div>
 
