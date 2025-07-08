@@ -20,6 +20,77 @@ const saveToFirebase = async (date, reportData) => {
   }
 };
 
+// 🚀 새로운 스마트 병합 저장 함수
+const smartSaveToFirebase = async (date, localData, updatedSection, senderName) => {
+  try {
+    console.log('🔄 스마트 병합 저장 시작:', { date, updatedSection, senderName });
+    
+    // 1. 최신 Firebase 데이터 불러오기
+    const docRef = doc(db, 'dailyReports', date);
+    const docSnap = await getDoc(docRef);
+    
+    let latestData = null;
+    if (docSnap.exists()) {
+      latestData = docSnap.data();
+      console.log('📥 최신 데이터 로드됨:', latestData);
+    }
+    
+    // 2. 데이터 병합 로직
+    let mergedData;
+    
+    if (!latestData) {
+      // Firebase에 데이터가 없으면 로컬 데이터 그대로 사용
+      mergedData = { ...localData };
+      console.log('📝 새 데이터 생성');
+    } else {
+      // 기존 데이터와 병합
+      mergedData = { ...latestData };
+      
+      // 수정된 섹션만 업데이트
+      if (updatedSection === 'daOverall') {
+        mergedData.daOverall = { ...localData.daOverall };
+        console.log('🔄 DA전체 섹션 업데이트');
+      } else if (updatedSection === 'partnership') {
+        mergedData.partnership = { ...localData.partnership };
+        console.log('🔄 제휴 섹션 업데이트');
+      } else if (updatedSection === 'attachmentNote') {
+        mergedData.attachmentNote = localData.attachmentNote;
+        console.log('🔄 첨부파일 안내 업데이트');
+      } else if (updatedSection.startsWith('media_')) {
+        // 개별 매체 업데이트 (예: media_토스, media_구글)
+        const mediaName = updatedSection.replace('media_', '');
+        if (!mergedData.mediaDetails) {
+          mergedData.mediaDetails = {};
+        }
+        mergedData.mediaDetails[mediaName] = { ...localData.mediaDetails[mediaName] };
+        console.log(`🔄 ${mediaName} 매체 업데이트`);
+      } else if (updatedSection === 'senderName') {
+        mergedData.senderName = localData.senderName;
+        console.log('🔄 보내는 사람 업데이트');
+      }
+      
+      // 기본 정보는 항상 최신으로 유지
+      mergedData.date = localData.date;
+      mergedData.senderName = senderName;
+    }
+    
+    // 3. 메타데이터 추가
+    mergedData.lastUpdated = serverTimestamp();
+    mergedData.lastUpdatedBy = senderName;
+    mergedData.lastUpdatedSection = updatedSection;
+    
+    // 4. Firebase에 저장
+    await setDoc(docRef, mergedData);
+    
+    console.log('✅ 스마트 병합 저장 완료:', mergedData);
+    return { success: true, mergedData };
+    
+  } catch (error) {
+    console.error('❌ 스마트 병합 저장 실패:', error);
+    return { success: false, error };
+  }
+};
+
 const loadFromFirebase = async (date) => {
   try {
     const docRef = doc(db, 'dailyReports', date);
@@ -231,6 +302,10 @@ const DailyReportPlatform = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastUpdatedBy, setLastUpdatedBy] = useState('');
   const [popupImage, setPopupImage] = useState(null);
+  
+  // 🚀 새로운 상태 추가
+  const [smartSaveSuccess, setSmartSaveSuccess] = useState(false);
+  const [lastSavedSection, setLastSavedSection] = useState('');
 
   const mediaList = [
     { id: 'DA전체', name: 'DA 전체', icon: '📊', bgColor: '#3B82F6' },
@@ -632,19 +707,31 @@ const DailyReportPlatform = () => {
     initializeData();
   }, []);
 
+  // 🚀 개선된 자동 저장 (스마트 병합 사용)
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
-      if (reportData.date && !isLoading) {
-        const success = await saveToFirebase(reportData.date, reportData);
-        if (success) {
-          setSyncSuccess(true);
-          setTimeout(() => setSyncSuccess(false), 2000);
+      if (reportData.date && !isLoading && currentMedia) {
+        let section;
+        if (currentMedia === 'DA전체') {
+          section = 'daOverall';
+        } else if (currentMedia === '제휴') {
+          section = 'partnership';
+        } else if (currentMedia !== '미리보기') {
+          section = `media_${currentMedia}`;
+        }
+        
+        if (section) {
+          const result = await smartSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
+          if (result.success) {
+            setSyncSuccess(true);
+            setTimeout(() => setSyncSuccess(false), 2000);
+          }
         }
       }
-    }, 10000);
+    }, 15000); // 15초로 늘림 (안정성)
 
     return () => clearInterval(autoSaveInterval);
-  }, [reportData, isLoading]);
+  }, [reportData, isLoading, currentMedia]);
 
   useEffect(() => {
     const handleEscKey = (event) => {
@@ -1230,13 +1317,41 @@ const DailyReportPlatform = () => {
     }
   };
 
+  // 🚀 개선된 스마트 저장 함수
   const saveCurrentData = async () => {
-    const success = await saveToFirebase(reportData.date, reportData);
-    if (success) {
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-      const reports = await getAllReports();
-      setAllReports(reports);
+    let section;
+    if (currentMedia === 'DA전체') {
+      section = 'daOverall';
+    } else if (currentMedia === '제휴') {
+      section = 'partnership';
+    } else if (currentMedia && currentMedia !== '미리보기') {
+      section = `media_${currentMedia}`;
+    } else {
+      // 메인 화면에서의 전체 저장
+      const result = await saveToFirebase(reportData.date, reportData);
+      if (result) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+        const reports = await getAllReports();
+        setAllReports(reports);
+      }
+      return;
+    }
+    
+    const result = await smartSaveToFirebase(reportData.date, reportData, section, reportData.senderName);
+    if (result.success) {
+      setSmartSaveSuccess(true);
+      setLastSavedSection(section);
+      setTimeout(() => {
+        setSmartSaveSuccess(false);
+        setLastSavedSection('');
+      }, 2000);
+      
+      // 로컬 데이터를 서버 데이터로 업데이트
+      if (result.mergedData) {
+        setReportData(result.mergedData);
+        setLastUpdatedBy(result.mergedData.lastUpdatedBy);
+      }
     }
   };
 
@@ -1395,8 +1510,6 @@ const DailyReportPlatform = () => {
     Object.keys(reportData.mediaDetails).forEach(media => {
       const mediaData = reportData.mediaDetails[media];
       if (mediaData && mediaData.content?.trim()) {
-        status[media] = 'completed';
-      } else if (mediaData && mediaData.noUpdate) {
         status[media] = 'noUpdate';
       } else {
         status[media] = 'incomplete';
@@ -1513,13 +1626,16 @@ const DailyReportPlatform = () => {
                   marginRight: '8px'
                 }}></div>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#374151' }}>
-                  🔥 Firebase 실시간 동기화 활성화
+                  🚀 스마트 병합 동기화 활성화
                 </span>
                 <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
-                  (팀원 모두 실시간 공유)
+                  (동시 작업 가능, 충돌 자동 해결)
                 </span>
                 {syncSuccess && (
-                    <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 동기화 완료</span>
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 자동 동기화</span>
+                )}
+                {smartSaveSuccess && (
+                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 스마트 저장 완료</span>
                 )}
                 {lastUpdatedBy && (
                   <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
@@ -1686,7 +1802,7 @@ const DailyReportPlatform = () => {
               disabled={isLoading}
             >
               <span>💾</span>
-              {saveSuccess ? '저장 완료!' : '저장하기'}
+              {saveSuccess ? '저장 완료!' : '전체 저장하기'}
             </button>
             <button
               onClick={() => setShowArchive(true)}
@@ -1943,13 +2059,13 @@ const DailyReportPlatform = () => {
             onClick={saveCurrentData}
             style={{
               ...styles.button,
-              backgroundColor: saveSuccess ? '#10B981' : '#3B82F6',
+              backgroundColor: smartSaveSuccess ? '#10B981' : '#3B82F6',
               color: 'white'
             }}
             disabled={isLoading}
           >
-            <span>💾</span>
-            {saveSuccess ? '저장됨!' : '저장하기'}
+            <span>🚀</span>
+            {smartSaveSuccess ? '스마트 저장됨!' : '스마트 저장'}
           </button>
         </div>
 
@@ -2342,4 +2458,6 @@ const DailyReportPlatform = () => {
   );
 };
 
-export default DailyReportPlatform;
+export default DailyReportPlatform;completed';
+      } else if (mediaData && mediaData.noUpdate) {
+        status[media] = '
