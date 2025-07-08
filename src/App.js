@@ -60,11 +60,10 @@ const getAllReports = async () => {
   }
 };
 
-// 데이터 호환성 함수 추가
+// 데이터 호환성 함수
 const migrateDataStructure = (data) => {
   if (!data) return null;
   
-  // 기존 데이터 구조를 새 구조로 변환
   const migratedData = { ...data };
   
   // daOverall 마이그레이션
@@ -830,7 +829,6 @@ const DailyReportPlatform = () => {
   };
 
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
-    // 안전한 이미지 접근
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
     
     return (
@@ -845,7 +843,665 @@ const DailyReportPlatform = () => {
         opacity: disabled ? 0.5 : 1
       }}>
         {safeImage.src ? (
-          <div style={styles.mainCard}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ position: 'relative', flex: '1' }}>
+              <img 
+                src={safeImage.src} 
+                alt={`${media || section} ${index + 1}`}
+                style={{ 
+                  width: '100%', 
+                  height: isLarge ? '120px' : '80px', 
+                  objectFit: 'cover', 
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+                onClick={() => handleImageClick(safeImage.src)}
+                title="클릭하면 확대해서 볼 수 있습니다"
+              />
+              <button
+                onClick={() => onDelete(section, media, index)}
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  right: '4px',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  backgroundColor: '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  zIndex: 10
+                }}
+                title="이미지 삭제"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              fontSize: '12px',
+              padding: '4px 0'
+            }}>
+              <input 
+                type="checkbox" 
+                checked={safeImage.includeInEmail}
+                onChange={(e) => onCheckboxChange(section, media, index, e.target.checked)}
+                style={{ marginRight: '6px', width: '14px', height: '14px' }}
+              />
+              <span style={{ color: '#374151', fontWeight: '500' }}>메일 포함</span>
+            </div>
+            
+            <div style={{ marginTop: '4px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '11px', 
+                color: '#6B7280', 
+                marginBottom: '4px',
+                textAlign: 'left'
+              }}>
+                이미지 캡션:
+              </label>
+              <input
+                type="text"
+                value={safeImage.caption || ''}
+                onChange={(e) => onCaptionChange(section, media, index, e.target.value)}
+                placeholder="캡션을 입력하세요 (선택사항)"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  fontSize: '12px',
+                  border: '2px solid #D1D5DB',
+                  borderRadius: '6px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div 
+            style={{ 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              cursor: disabled ? 'not-allowed' : 'pointer'
+            }}
+            onPaste={disabled ? null : (e) => onPaste(e, section, media, index)}
+            tabIndex={disabled ? -1 : 0}
+            onMouseOver={(e) => {
+              if (!disabled) {
+                e.currentTarget.style.borderColor = '#3B82F6';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!disabled) {
+                e.currentTarget.style.borderColor = '#D1D5DB';
+              }
+            }}
+          >
+            <div style={{ fontSize: isLarge ? '40px' : '30px', marginBottom: '12px', opacity: 0.5 }}>🖼️</div>
+            <p style={{ fontSize: '14px', color: '#6B7280', margin: '4px 0', fontWeight: '500' }}>이미지 {index + 1}</p>
+            <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>
+              {disabled ? '특이사항 없음' : 'Ctrl+V로 붙여넣기'}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekDay = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+    return `${month}/${day}(${weekDay})`;
+  };
+
+  const formatEmailDate = (dateString) => {
+    const date = new Date(dateString);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${month}${day}`;
+  };
+
+  const generateEmailContent = () => {
+    const formattedDate = formatDate(reportData.date);
+    const senderName = reportData.senderName || '박희수';
+    
+    let emailContent = `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`;
+    
+    if (reportData.attachmentNote.trim()) {
+      emailContent += `${reportData.attachmentNote}\n\n`;
+    } else {
+      emailContent += `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`;
+    }
+    
+    emailContent += `* DA 파트\n[전체]\n`;
+    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
+      emailContent += `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`;
+    }
+    
+    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
+    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
+    if (hasMediaContent) {
+      emailContent += `[미디어 상세]\n`;
+      let mediaCount = 0;
+      mediaOrder.forEach(media => {
+        const data = reportData.mediaDetails[media];
+        if (data?.content?.trim()) {
+          mediaCount++;
+          emailContent += `${mediaCount}. ${media}\n${data.content}\n\n`;
+        }
+      });
+    }
+    
+    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
+      emailContent += `* 제휴 파트\n`;
+      
+      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
+        emailContent += `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`;
+      }
+      
+      if (reportData.partnership.details?.trim()) {
+        emailContent += `${reportData.partnership.details}\n\n`;
+      }
+    }
+    
+    if (reportData.partnership.weeklyPlan?.trim()) {
+      emailContent += `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`;
+    }
+    
+    emailContent += `감사합니다.\n${senderName} 드림`;
+    
+    return emailContent;
+  };
+
+  const generateEmailWithImages = () => {
+    const formattedDate = formatDate(reportData.date);
+    const senderName = reportData.senderName || '박희수';
+    
+    const emailSections = [];
+    
+    emailSections.push({
+      type: 'text',
+      content: `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`
+    });
+    
+    if (reportData.attachmentNote.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `${reportData.attachmentNote}\n\n`
+      });
+    } else {
+      emailSections.push({
+        type: 'text',
+        content: `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`
+      });
+    }
+    
+    emailSections.push({
+      type: 'text',
+      content: `* DA 파트\n[전체]\n`
+    });
+    
+    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
+      emailSections.push({
+        type: 'text',
+        content: `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`
+      });
+    }
+    
+    if (reportData.daOverall.images && Array.isArray(reportData.daOverall.images)) {
+      reportData.daOverall.images.forEach((image, index) => {
+        if (image && image.src && image.includeInEmail) {
+          if (image.caption && image.caption.trim()) {
+            emailSections.push({
+              type: 'text',
+              content: `▼ ${image.caption}\n`
+            });
+          }
+          emailSections.push({
+            type: 'image',
+            src: image.src,
+            alt: `DA 전체 성과 ${index + 1}`
+          });
+        }
+      });
+    }
+    
+    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
+    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
+    
+    if (hasMediaContent) {
+      emailSections.push({
+        type: 'text',
+        content: `[미디어 상세]\n`
+      });
+      
+      let mediaCount = 0;
+      mediaOrder.forEach(media => {
+        const data = reportData.mediaDetails[media];
+        if (data?.content?.trim()) {
+          mediaCount++;
+          emailSections.push({
+            type: 'text',
+            content: `${mediaCount}. ${media}\n${data.content}\n\n`
+          });
+          
+          if (data.images && Array.isArray(data.images)) {
+            data.images.forEach((image, index) => {
+              if (image && image.src && image.includeInEmail) {
+                if (image.caption && image.caption.trim()) {
+                  emailSections.push({
+                    type: 'text',
+                    content: `▼ ${image.caption}\n`
+                  });
+                }
+                emailSections.push({
+                  type: 'image',
+                  src: image.src,
+                  alt: `${media} 성과 ${index + 1}`
+                });
+              }
+            });
+          }
+        }
+      });
+    }
+    
+    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `* 제휴 파트\n`
+      });
+      
+      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
+        emailSections.push({
+          type: 'text',
+          content: `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`
+        });
+      }
+      
+      if (reportData.partnership.details?.trim()) {
+        emailSections.push({
+          type: 'text',
+          content: `${reportData.partnership.details}\n\n`
+        });
+      }
+      
+      if (reportData.partnership.images && Array.isArray(reportData.partnership.images)) {
+        reportData.partnership.images.forEach((image, index) => {
+          if (image && image.src && image.includeInEmail) {
+            if (image.caption && image.caption.trim()) {
+              emailSections.push({
+                type: 'text',
+                content: `▼ ${image.caption}\n`
+              });
+            }
+            emailSections.push({
+              type: 'image',
+              src: image.src,
+              alt: `제휴 성과 ${index + 1}`
+            });
+          }
+        });
+      }
+    }
+    
+    if (reportData.partnership.weeklyPlan?.trim()) {
+      emailSections.push({
+        type: 'text',
+        content: `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`
+      });
+    }
+    
+    emailSections.push({
+      type: 'text',
+      content: `감사합니다.\n${senderName} 드림`
+    });
+    
+    return emailSections;
+  };
+
+  useEffect(() => {
+    const emailContent = generateEmailContent();
+    setGeneratedEmail(emailContent);
+  }, [reportData]);
+
+  const copyEmailToClipboard = async () => {
+    try {
+      const emailDate = formatEmailDate(reportData.date);
+      const subject = `[에코/장기TM/DA] 메리츠화재 데일리보고_25년 ${emailDate}`;
+      const recipients = '받는사람: 박영빈님/TM마케팅파트 <yb.park@meritz.co.kr>';
+      const cc = '참조: 김윤희님/TM마케팅파트 <yoonhee.k@meritz.co.kr>, 이원진/리더/TM마케팅파트 <wonjin.lee@meritz.co.kr>, echo_메리츠다이렉트 <echo_meritzdirect@echomarketing.co.kr>, 디트라이브_팀메일 <meritz@dtribe.co.kr>';
+      
+      const fullEmail = `${subject}\n\n${recipients}\n${cc}\n\n${generatedEmail}`;
+      
+      await navigator.clipboard.writeText(fullEmail);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('복사 실패:', err);
+      alert('메일 내용 복사에 실패했습니다.');
+    }
+  };
+
+  const saveToGmailDrafts = () => {
+    try {
+      setIsGmailLoading(true);
+      setGmailSaveError('');
+      setGmailSaveSuccess(false);
+      
+      const emailDate = formatEmailDate(reportData.date);
+      const subject = `[에코/장기TM/DA] 메리츠화재 데일리보고_25년 ${emailDate}`;
+      const toEmail = 'yb.park@meritz.co.kr';
+      const ccEmails = 'yoonhee.k@meritz.co.kr,wonjin.lee@meritz.co.kr,echo_meritzdirect@echomarketing.co.kr,meritz@dtribe.co.kr';
+      
+      const gmailUrl = `https://mail.google.com/mail/u/0/?fs=1&tf=cm` +
+        `&su=${encodeURIComponent(subject)}` +
+        `&to=${encodeURIComponent(toEmail)}` +
+        `&cc=${encodeURIComponent(ccEmails)}` +
+        `&body=${encodeURIComponent(generatedEmail)}`;
+      
+      window.open(gmailUrl, '_blank');
+      
+      setGmailSaveSuccess(true);
+      setTimeout(() => setGmailSaveSuccess(false), 3000);
+      
+    } catch (error) {
+      console.error('Gmail 저장 실패:', error);
+      setGmailSaveError(`Gmail 저장 실패: ${error.message}`);
+      setTimeout(() => setGmailSaveError(''), 5000);
+    } finally {
+      setIsGmailLoading(false);
+    }
+  };
+
+  const saveCurrentData = async () => {
+    const success = await saveToFirebase(reportData.date, reportData);
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+      const reports = await getAllReports();
+      setAllReports(reports);
+    }
+  };
+
+  const archiveData = async () => {
+    const success = await saveToFirebase(reportData.date, reportData);
+    if (success) {
+      setArchiveSuccess(true);
+      setTimeout(() => setArchiveSuccess(false), 2000);
+      const reports = await getAllReports();
+      setAllReports(reports);
+    }
+  };
+
+  const resetCurrentData = () => {
+    setShowResetConfirm(true);
+  };
+
+  const confirmReset = async () => {
+    const emptyData = {
+      date: reportData.date,
+      senderName: reportData.senderName,
+      daOverall: {
+        totalBudget: '',
+        totalLeads: '',
+        totalCPA: '',
+        images: [
+          { src: null, includeInEmail: false, caption: '' },
+          { src: null, includeInEmail: false, caption: '' },
+          { src: null, includeInEmail: false, caption: '' },
+          { src: null, includeInEmail: false, caption: '' }
+        ]
+      },
+      mediaDetails: {
+        '토스': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        },
+        '네이버GFA': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        },
+        '네이버NOSP': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        },
+        '카카오': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        },
+        '구글': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        },
+        '메타': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        },
+        '앱캠페인': { 
+          content: '', 
+          images: [
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' },
+            { src: null, includeInEmail: false, caption: '' }
+          ], 
+          noUpdate: false 
+        }
+      },
+      partnership: {
+        totalBudget: '',
+        totalLeads: '',
+        totalCPA: '',
+        details: '',
+        images: [
+          { src: null, includeInEmail: false, caption: '' },
+          { src: null, includeInEmail: false, caption: '' },
+          { src: null, includeInEmail: false, caption: '' },
+          { src: null, includeInEmail: false, caption: '' }
+        ],
+        weeklyPlan: ''
+      },
+      attachmentNote: ''
+    };
+    
+    setReportData(emptyData);
+    await saveToFirebase(reportData.date, emptyData);
+    setShowResetConfirm(false);
+    setResetSuccess(true);
+    setTimeout(() => setResetSuccess(false), 2000);
+  };
+
+  const cancelReset = () => {
+    setShowResetConfirm(false);
+  };
+
+  const loadArchivedData = async (date) => {
+    try {
+      setIsLoading(true);
+      const data = await loadFromFirebase(date);
+      const migratedData = migrateDataStructure(data);
+      
+      if (migratedData) {
+        setReportData({ ...migratedData, date });
+        setLastUpdatedBy(migratedData.lastUpdatedBy || '');
+        setShowArchive(false);
+        setShowTeamView(false);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error('아카이브 데이터 불러오기 실패:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const getCompletionStatus = () => {
+    const status = {};
+    
+    status['DA전체'] = !!(reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA);
+    
+    Object.keys(reportData.mediaDetails).forEach(media => {
+      const mediaData = reportData.mediaDetails[media];
+      if (mediaData && mediaData.content?.trim()) {
+        status[media] = 'completed';
+      } else if (mediaData && mediaData.noUpdate) {
+        status[media] = 'noUpdate';
+      } else {
+        status[media] = 'incomplete';
+      }
+    });
+    
+    status['제휴'] = !!(reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim());
+    
+    return status;
+  };
+
+  if (showArchive) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.mainCard}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <button
+                onClick={() => setShowArchive(false)}
+                style={{
+                  ...styles.button,
+                  backgroundColor: '#F3F4F6',
+                  color: '#374151',
+                  padding: '8px 12px',
+                  marginRight: '16px'
+                }}
+              >
+                ←
+              </button>
+              <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>과거 리포트</h1>
+            </div>
+          </div>
+          
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div style={{ 
+                width: '32px', 
+                height: '32px', 
+                border: '3px solid #3B82F6', 
+                borderTop: '3px solid transparent', 
+                borderRadius: '50%', 
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 16px'
+              }}></div>
+              <p style={{ color: '#6B7280', fontSize: '16px' }}>데이터를 불러오는 중...</p>
+            </div>
+          ) : allReports.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>📁</div>
+              <p style={{ color: '#6B7280', fontSize: '16px' }}>저장된 리포트가 없습니다.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+              {allReports.map(report => (
+                <button
+                  key={report.id}
+                  onClick={() => loadArchivedData(report.date)}
+                  style={{
+                    padding: '16px',
+                    backgroundColor: '#EFF6FF',
+                    border: '2px solid #BFDBFE',
+                    borderRadius: '12px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.backgroundColor = '#DBEAFE';
+                    e.target.style.borderColor = '#93C5FD';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.backgroundColor = '#EFF6FF';
+                    e.target.style.borderColor = '#BFDBFE';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#1E40AF', fontSize: '16px' }}>
+                        {formatDate(report.date)}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#3B82F6' }}>
+                        {report.senderName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6B7280' }}>
+                        {report.lastUpdatedBy && `최종 수정: ${report.lastUpdatedBy}`}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '24px' }}>📅</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentMedia) {
+    const completionStatus = getCompletionStatus();
+    const completedCount = Object.values(completionStatus).filter(status => status === 'completed' || status === 'noUpdate' || status === true).length;
+    
+    return (
+      <div style={styles.container}>
+        <div style={styles.mainCard}>
           <div style={styles.statusCard}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -863,7 +1519,7 @@ const DailyReportPlatform = () => {
                   (팀원 모두 실시간 공유)
                 </span>
                 {syncSuccess && (
-                  <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 동기화 완료</span>
+                    <span style={{ fontSize: '12px', color: '#10B981', marginLeft: '8px' }}>✓ 동기화 완료</span>
                 )}
                 {lastUpdatedBy && (
                   <span style={{ fontSize: '12px', color: '#6B7280', marginLeft: '8px' }}>
@@ -1682,669 +2338,8 @@ const DailyReportPlatform = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
-export default DailyReportPlatform;{ height: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ position: 'relative', flex: '1' }}>
-              <img 
-                src={safeImage.src} 
-                alt={`${media || section} ${index + 1}`}
-                style={{ 
-                  width: '100%', 
-                  height: isLarge ? '120px' : '80px', 
-                  objectFit: 'cover', 
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-                onClick={() => handleImageClick(safeImage.src)}
-                title="클릭하면 확대해서 볼 수 있습니다"
-              />
-              <button
-                onClick={() => onDelete(section, media, index)}
-                style={{
-                  position: 'absolute',
-                  top: '4px',
-                  right: '4px',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  backgroundColor: '#EF4444',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  zIndex: 10
-                }}
-                title="이미지 삭제"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              fontSize: '12px',
-              padding: '4px 0'
-            }}>
-              <input 
-                type="checkbox" 
-                checked={safeImage.includeInEmail}
-                onChange={(e) => onCheckboxChange(section, media, index, e.target.checked)}
-                style={{ marginRight: '6px', width: '14px', height: '14px' }}
-              />
-              <span style={{ color: '#374151', fontWeight: '500' }}>메일 포함</span>
-            </div>
-            
-            <div style={{ marginTop: '4px' }}>
-              <label style={{ 
-                display: 'block', 
-                fontSize: '11px', 
-                color: '#6B7280', 
-                marginBottom: '4px',
-                textAlign: 'left'
-              }}>
-                이미지 캡션:
-              </label>
-              <input
-                type="text"
-                value={safeImage.caption || ''}
-                onChange={(e) => onCaptionChange(section, media, index, e.target.value)}
-                placeholder="캡션을 입력하세요 (선택사항)"
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  fontSize: '12px',
-                  border: '2px solid #D1D5DB',
-                  borderRadius: '6px',
-                  backgroundColor: 'white',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-          </div>
-        ) : (
-          <div 
-            style={{ 
-              height: '100%', 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              cursor: disabled ? 'not-allowed' : 'pointer'
-            }}
-            onPaste={disabled ? null : (e) => onPaste(e, section, media, index)}
-            tabIndex={disabled ? -1 : 0}
-            onMouseOver={(e) => {
-              if (!disabled) {
-                e.target.style.borderColor = '#3B82F6';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!disabled) {
-                e.target.style.borderColor = '#D1D5DB';
-              }
-            }}
-          >
-            <div style={{ fontSize: isLarge ? '40px' : '30px', marginBottom: '12px', opacity: 0.5 }}>🖼️</div>
-            <p style={{ fontSize: '14px', color: '#6B7280', margin: '4px 0', fontWeight: '500' }}>이미지 {index + 1}</p>
-            <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>
-              {disabled ? '특이사항 없음' : 'Ctrl+V로 붙여넣기'}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const weekDay = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
-    return `${month}/${day}(${weekDay})`;
-  };
-
-  const formatEmailDate = (dateString) => {
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${month}${day}`;
-  };
-
-  const generateEmailContent = () => {
-    const formattedDate = formatDate(reportData.date);
-    const senderName = reportData.senderName || '박희수';
-    
-    let emailContent = `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`;
-    
-    if (reportData.attachmentNote.trim()) {
-      emailContent += `${reportData.attachmentNote}\n\n`;
-    } else {
-      emailContent += `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`;
-    }
-    
-    emailContent += `* DA 파트\n[전체]\n`;
-    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
-      emailContent += `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`;
-    }
-    
-    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
-    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
-    if (hasMediaContent) {
-      emailContent += `[미디어 상세]\n`;
-      let mediaCount = 0;
-      mediaOrder.forEach(media => {
-        const data = reportData.mediaDetails[media];
-        if (data?.content?.trim()) {
-          mediaCount++;
-          emailContent += `${mediaCount}. ${media}\n${data.content}\n\n`;
-        }
-      });
-    }
-    
-    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
-      emailContent += `* 제휴 파트\n`;
-      
-      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
-        emailContent += `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`;
-      }
-      
-      if (reportData.partnership.details?.trim()) {
-        emailContent += `${reportData.partnership.details}\n\n`;
-      }
-    }
-    
-    if (reportData.partnership.weeklyPlan?.trim()) {
-      emailContent += `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`;
-    }
-    
-    emailContent += `감사합니다.\n${senderName} 드림`;
-    
-    return emailContent;
-  };
-
-  const generateEmailWithImages = () => {
-    const formattedDate = formatDate(reportData.date);
-    const senderName = reportData.senderName || '박희수';
-    
-    const emailSections = [];
-    
-    emailSections.push({
-      type: 'text',
-      content: `안녕하세요,\n에코마케팅 ${senderName}입니다.\n\n`
-    });
-    
-    if (reportData.attachmentNote.trim()) {
-      emailSections.push({
-        type: 'text',
-        content: `${reportData.attachmentNote}\n\n`
-      });
-    } else {
-      emailSections.push({
-        type: 'text',
-        content: `리포트는 용량크기 상 대용량 첨부로 공유드립니다.\n(대용량 첨부파일)\n\n`
-      });
-    }
-    
-    emailSections.push({
-      type: 'text',
-      content: `* DA 파트\n[전체]\n`
-    });
-    
-    if (reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA) {
-      emailSections.push({
-        type: 'text',
-        content: `${formattedDate} 총 광고비 ${reportData.daOverall.totalBudget} / 가망자원 ${reportData.daOverall.totalLeads} / 가망CPA ${reportData.daOverall.totalCPA}\n\n`
-      });
-    }
-    
-    // 안전한 이미지 접근
-    if (reportData.daOverall.images && Array.isArray(reportData.daOverall.images)) {
-      reportData.daOverall.images.forEach((image, index) => {
-        if (image && image.src && image.includeInEmail) {
-          if (image.caption && image.caption.trim()) {
-            emailSections.push({
-              type: 'text',
-              content: `▼ ${image.caption}\n`
-            });
-          }
-          emailSections.push({
-            type: 'image',
-            src: image.src,
-            alt: `DA 전체 성과 ${index + 1}`
-          });
-        }
-      });
-    }
-    
-    const mediaOrder = ['토스', '네이버GFA', '네이버NOSP', '카카오', '구글', '메타', '앱캠페인'];
-    const hasMediaContent = mediaOrder.some(media => reportData.mediaDetails[media]?.content?.trim());
-    
-    if (hasMediaContent) {
-      emailSections.push({
-        type: 'text',
-        content: `[미디어 상세]\n`
-      });
-      
-      let mediaCount = 0;
-      mediaOrder.forEach(media => {
-        const data = reportData.mediaDetails[media];
-        if (data?.content?.trim()) {
-          mediaCount++;
-          emailSections.push({
-            type: 'text',
-            content: `${mediaCount}. ${media}\n${data.content}\n\n`
-          });
-          
-          // 안전한 이미지 접근
-          if (data.images && Array.isArray(data.images)) {
-            data.images.forEach((image, index) => {
-              if (image && image.src && image.includeInEmail) {
-                if (image.caption && image.caption.trim()) {
-                  emailSections.push({
-                    type: 'text',
-                    content: `▼ ${image.caption}\n`
-                  });
-                }
-                emailSections.push({
-                  type: 'image',
-                  src: image.src,
-                  alt: `${media} 성과 ${index + 1}`
-                });
-              }
-            });
-          }
-        }
-      });
-    }
-    
-    if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim()) {
-      emailSections.push({
-        type: 'text',
-        content: `* 제휴 파트\n`
-      });
-      
-      if (reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA) {
-        emailSections.push({
-          type: 'text',
-          content: `${formattedDate} 광고비 ${reportData.partnership.totalBudget} / 가망자원 ${reportData.partnership.totalLeads} / 가망 CPA ${reportData.partnership.totalCPA}\n\n`
-        });
-      }
-      
-      if (reportData.partnership.details?.trim()) {
-        emailSections.push({
-          type: 'text',
-          content: `${reportData.partnership.details}\n\n`
-        });
-      }
-      
-      // 안전한 이미지 접근
-      if (reportData.partnership.images && Array.isArray(reportData.partnership.images)) {
-        reportData.partnership.images.forEach((image, index) => {
-          if (image && image.src && image.includeInEmail) {
-            if (image.caption && image.caption.trim()) {
-              emailSections.push({
-                type: 'text',
-                content: `▼ ${image.caption}\n`
-              });
-            }
-            emailSections.push({
-              type: 'image',
-              src: image.src,
-              alt: `제휴 성과 ${index + 1}`
-            });
-          }
-        });
-      }
-    }
-    
-    if (reportData.partnership.weeklyPlan?.trim()) {
-      emailSections.push({
-        type: 'text',
-        content: `[금주 MKT 플랜]\n${reportData.partnership.weeklyPlan}\n\n`
-      });
-    }
-    
-    emailSections.push({
-      type: 'text',
-      content: `감사합니다.\n${senderName} 드림`
-    });
-    
-    return emailSections;
-  };
-
-  useEffect(() => {
-    const emailContent = generateEmailContent();
-    setGeneratedEmail(emailContent);
-  }, [reportData]);
-
-  const copyEmailToClipboard = async () => {
-    try {
-      const emailDate = formatEmailDate(reportData.date);
-      const subject = `[에코/장기TM/DA] 메리츠화재 데일리보고_25년 ${emailDate}`;
-      const recipients = '받는사람: 박영빈님/TM마케팅파트 <yb.park@meritz.co.kr>';
-      const cc = '참조: 김윤희님/TM마케팅파트 <yoonhee.k@meritz.co.kr>, 이원진/리더/TM마케팅파트 <wonjin.lee@meritz.co.kr>, echo_메리츠다이렉트 <echo_meritzdirect@echomarketing.co.kr>, 디트라이브_팀메일 <meritz@dtribe.co.kr>';
-      
-      const fullEmail = `${subject}\n\n${recipients}\n${cc}\n\n${generatedEmail}`;
-      
-      await navigator.clipboard.writeText(fullEmail);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error('복사 실패:', err);
-      alert('메일 내용 복사에 실패했습니다.');
-    }
-  };
-
-  const saveToGmailDrafts = () => {
-    try {
-      setIsGmailLoading(true);
-      setGmailSaveError('');
-      setGmailSaveSuccess(false);
-      
-      const emailDate = formatEmailDate(reportData.date);
-      const subject = `[에코/장기TM/DA] 메리츠화재 데일리보고_25년 ${emailDate}`;
-      const toEmail = 'yb.park@meritz.co.kr';
-      const ccEmails = 'yoonhee.k@meritz.co.kr,wonjin.lee@meritz.co.kr,echo_meritzdirect@echomarketing.co.kr,meritz@dtribe.co.kr';
-      
-      const gmailUrl = `https://mail.google.com/mail/u/0/?fs=1&tf=cm` +
-        `&su=${encodeURIComponent(subject)}` +
-        `&to=${encodeURIComponent(toEmail)}` +
-        `&cc=${encodeURIComponent(ccEmails)}` +
-        `&body=${encodeURIComponent(generatedEmail)}`;
-      
-      window.open(gmailUrl, '_blank');
-      
-      setGmailSaveSuccess(true);
-      setTimeout(() => setGmailSaveSuccess(false), 3000);
-      
-    } catch (error) {
-      console.error('Gmail 저장 실패:', error);
-      setGmailSaveError(`Gmail 저장 실패: ${error.message}`);
-      setTimeout(() => setGmailSaveError(''), 5000);
-    } finally {
-      setIsGmailLoading(false);
-    }
-  };
-
-  const saveCurrentData = async () => {
-    const success = await saveToFirebase(reportData.date, reportData);
-    if (success) {
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-      const reports = await getAllReports();
-      setAllReports(reports);
-    }
-  };
-
-  const archiveData = async () => {
-    const success = await saveToFirebase(reportData.date, reportData);
-    if (success) {
-      setArchiveSuccess(true);
-      setTimeout(() => setArchiveSuccess(false), 2000);
-      const reports = await getAllReports();
-      setAllReports(reports);
-    }
-  };
-
-  const resetCurrentData = () => {
-    setShowResetConfirm(true);
-  };
-
-  const confirmReset = async () => {
-    const emptyData = {
-      date: reportData.date,
-      senderName: reportData.senderName,
-      daOverall: {
-        totalBudget: '',
-        totalLeads: '',
-        totalCPA: '',
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ]
-      },
-      mediaDetails: {
-        '토스': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '네이버GFA': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '네이버NOSP': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '카카오': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '구글': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '메타': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        },
-        '앱캠페인': { 
-          content: '', 
-          images: [
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' },
-            { src: null, includeInEmail: false, caption: '' }
-          ], 
-          noUpdate: false 
-        }
-      },
-      partnership: {
-        totalBudget: '',
-        totalLeads: '',
-        totalCPA: '',
-        details: '',
-        images: [
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' },
-          { src: null, includeInEmail: false, caption: '' }
-        ],
-        weeklyPlan: ''
-      },
-      attachmentNote: ''
-    };
-    
-    setReportData(emptyData);
-    await saveToFirebase(reportData.date, emptyData);
-    setShowResetConfirm(false);
-    setResetSuccess(true);
-    setTimeout(() => setResetSuccess(false), 2000);
-  };
-
-  const cancelReset = () => {
-    setShowResetConfirm(false);
-  };
-
-  const loadArchivedData = async (date) => {
-    try {
-      setIsLoading(true);
-      const data = await loadFromFirebase(date);
-      const migratedData = migrateDataStructure(data);
-      
-      if (migratedData) {
-        setReportData({ ...migratedData, date });
-        setLastUpdatedBy(migratedData.lastUpdatedBy || '');
-        setShowArchive(false);
-        setShowTeamView(false);
-      }
-      setIsLoading(false);
-    } catch (error) {
-      console.error('아카이브 데이터 불러오기 실패:', error);
-      setIsLoading(false);
-    }
-  };
-
-  const getCompletionStatus = () => {
-    const status = {};
-    
-    status['DA전체'] = !!(reportData.daOverall.totalBudget || reportData.daOverall.totalLeads || reportData.daOverall.totalCPA);
-    
-    Object.keys(reportData.mediaDetails).forEach(media => {
-      const mediaData = reportData.mediaDetails[media];
-      if (mediaData && mediaData.content?.trim()) {
-        status[media] = 'completed';
-      } else if (mediaData && mediaData.noUpdate) {
-        status[media] = 'noUpdate';
-      } else {
-        status[media] = 'incomplete';
-      }
-    });
-    
-    status['제휴'] = !!(reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim());
-    
-    return status;
-  };
-
-  if (showArchive) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.mainCard}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button
-                onClick={() => setShowArchive(false)}
-                style={{
-                  ...styles.button,
-                  backgroundColor: '#F3F4F6',
-                  color: '#374151',
-                  padding: '8px 12px',
-                  marginRight: '16px'
-                }}
-              >
-                ←
-              </button>
-              <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>과거 리포트</h1>
-            </div>
-          </div>
-          
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <div style={{ 
-                width: '32px', 
-                height: '32px', 
-                border: '3px solid #3B82F6', 
-                borderTop: '3px solid transparent', 
-                borderRadius: '50%', 
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto 16px'
-              }}></div>
-              <p style={{ color: '#6B7280', fontSize: '16px' }}>데이터를 불러오는 중...</p>
-            </div>
-          ) : allReports.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>📁</div>
-              <p style={{ color: '#6B7280', fontSize: '16px' }}>저장된 리포트가 없습니다.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-              {allReports.map(report => (
-                <button
-                  key={report.id}
-                  onClick={() => loadArchivedData(report.date)}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#EFF6FF',
-                    border: '2px solid #BFDBFE',
-                    borderRadius: '12px',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.target.style.backgroundColor = '#DBEAFE';
-                    e.target.style.borderColor = '#93C5FD';
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.backgroundColor = '#EFF6FF';
-                    e.target.style.borderColor = '#BFDBFE';
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontWeight: '600', color: '#1E40AF', fontSize: '16px' }}>
-                        {formatDate(report.date)}
-                      </div>
-                      <div style={{ fontSize: '14px', color: '#3B82F6' }}>
-                        {report.senderName}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#6B7280' }}>
-                        {report.lastUpdatedBy && `최종 수정: ${report.lastUpdatedBy}`}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '24px' }}>📅</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentMedia) {
-    const completionStatus = getCompletionStatus();
-    const completedCount = Object.values(completionStatus).filter(status => status === 'completed' || status === 'noUpdate' || status === true).length;
-    
-    return (
-      <div style={styles.container}>
-        <div style={
+export default DailyReportPlatform;
