@@ -1509,19 +1509,9 @@ const DailyReportPlatform = () => {
     
     Object.keys(reportData.mediaDetails).forEach(media => {
       const mediaData = reportData.mediaDetails[media];
-      if (mediaData && mediaData.content?.trim()) {
+      if (mediaData && mediaData.noUpdate) {
         status[media] = 'noUpdate';
-      } else {
-        status[media] = 'incomplete';
-      }
-    });
-    
-    status['제휴'] = !!(reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim());
-    
-    return status;
-  };
-
-  if (showArchive) {
+      }   if (showArchive) {
     return (
       <div style={styles.container}>
         <div style={styles.mainCard}>
@@ -2459,5 +2449,12 @@ const DailyReportPlatform = () => {
 };
 
 export default DailyReportPlatform;completed';
-      } else if (mediaData && mediaData.noUpdate) {
-        status[media] = '
+      } else {
+        status[media] = 'incomplete';
+      }
+    });
+    
+    status['제휴'] = !!(reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim());
+    
+    return status;
+  };
