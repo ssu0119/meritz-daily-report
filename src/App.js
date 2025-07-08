@@ -1682,7 +1682,7 @@ const DailyReportPlatform = () => {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
