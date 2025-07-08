@@ -302,8 +302,6 @@ const DailyReportPlatform = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastUpdatedBy, setLastUpdatedBy] = useState('');
   const [popupImage, setPopupImage] = useState(null);
-  
-  // 🚀 새로운 상태 추가
   const [smartSaveSuccess, setSmartSaveSuccess] = useState(false);
   const [lastSavedSection, setLastSavedSection] = useState('');
 
@@ -707,7 +705,7 @@ const DailyReportPlatform = () => {
     initializeData();
   }, []);
 
-  // 🚀 개선된 자동 저장 (스마트 병합 사용)
+  // 자동 저장 useEffect
   useEffect(() => {
     const autoSaveInterval = setInterval(async () => {
       if (reportData.date && !isLoading && currentMedia) {
@@ -728,11 +726,12 @@ const DailyReportPlatform = () => {
           }
         }
       }
-    }, 15000); // 15초로 늘림 (안정성)
+    }, 15000);
 
     return () => clearInterval(autoSaveInterval);
   }, [reportData, isLoading, currentMedia]);
 
+  // ESC 키 처리 useEffect
   useEffect(() => {
     const handleEscKey = (event) => {
       if (event.key === 'Escape' && popupImage) {
@@ -1317,7 +1316,6 @@ const DailyReportPlatform = () => {
     }
   };
 
-  // 🚀 개선된 스마트 저장 함수
   const saveCurrentData = async () => {
     let section;
     if (currentMedia === 'DA전체') {
@@ -1327,7 +1325,6 @@ const DailyReportPlatform = () => {
     } else if (currentMedia && currentMedia !== '미리보기') {
       section = `media_${currentMedia}`;
     } else {
-      // 메인 화면에서의 전체 저장
       const result = await saveToFirebase(reportData.date, reportData);
       if (result) {
         setSaveSuccess(true);
@@ -1347,7 +1344,6 @@ const DailyReportPlatform = () => {
         setLastSavedSection('');
       }, 2000);
       
-      // 로컬 데이터를 서버 데이터로 업데이트
       if (result.mergedData) {
         setReportData(result.mergedData);
         setLastUpdatedBy(result.mergedData.lastUpdatedBy);
@@ -1511,7 +1507,19 @@ const DailyReportPlatform = () => {
       const mediaData = reportData.mediaDetails[media];
       if (mediaData && mediaData.noUpdate) {
         status[media] = 'noUpdate';
-      }   if (showArchive) {
+      } else if (mediaData && mediaData.content?.trim()) {
+        status[media] = 'completed';
+      } else {
+        status[media] = 'incomplete';
+      }
+    });
+    
+    status['제휴'] = !!(reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim());
+    
+    return status;
+  };
+
+  if (showArchive) {
     return (
       <div style={styles.container}>
         <div style={styles.mainCard}>
@@ -2448,13 +2456,4 @@ const DailyReportPlatform = () => {
   );
 };
 
-export default DailyReportPlatform;completed';
-      } else {
-        status[media] = 'incomplete';
-      }
-    });
-    
-    status['제휴'] = !!(reportData.partnership.totalBudget || reportData.partnership.totalLeads || reportData.partnership.totalCPA || reportData.partnership.details?.trim());
-    
-    return status;
-  };
+export default DailyReportPlatform;
