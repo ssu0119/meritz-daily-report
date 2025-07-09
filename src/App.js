@@ -943,6 +943,34 @@ const DailyReportPlatform = () => {
 
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
+    const [localCaption, setLocalCaption] = useState(safeImage.caption || '');
+    const [isComposing, setIsComposing] = useState(false);
+    
+    // 부모 컴포넌트 상태가 변경될 때 로컬 상태도 동기화
+    useEffect(() => {
+      setLocalCaption(safeImage.caption || '');
+    }, [safeImage.caption]);
+    
+    const handleCaptionInputChange = (e) => {
+      const newValue = e.target.value;
+      setLocalCaption(newValue);
+      
+      // 한글 입력 중이 아닐 때만 부모 상태 업데이트
+      if (!isComposing) {
+        onCaptionChange(section, media, index, newValue);
+      }
+    };
+    
+    const handleCompositionStart = () => {
+      setIsComposing(true);
+    };
+    
+    const handleCompositionEnd = (e) => {
+      setIsComposing(false);
+      const newValue = e.target.value;
+      setLocalCaption(newValue);
+      onCaptionChange(section, media, index, newValue);
+    };
     
     return (
       <div style={{
@@ -1025,8 +1053,10 @@ const DailyReportPlatform = () => {
               </label>
               <input
                 type="text"
-                value={safeImage.caption || ''}
-                onChange={(e) => onCaptionChange(section, media, index, e.target.value)}
+                value={localCaption}
+                onChange={handleCaptionInputChange}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
                 placeholder="캡션을 입력하세요 (선택사항)"
                 style={{
                   width: '100%',
@@ -1038,11 +1068,8 @@ const DailyReportPlatform = () => {
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}
-                onFocus={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                onCompositionStart={(e) => e.stopPropagation()}
-                onCompositionEnd={(e) => e.stopPropagation()}
                 autoComplete="off"
+                spellCheck="false"
               />
             </div>
           </div>
