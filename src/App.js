@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 
@@ -945,6 +945,7 @@ const DailyReportPlatform = () => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
     const [localCaption, setLocalCaption] = useState(safeImage.caption || '');
     const [isComposing, setIsComposing] = useState(false);
+    const inputRef = useRef(null);
     
     // 부모 컴포넌트 상태가 변경될 때 로컬 상태도 동기화
     useEffect(() => {
@@ -970,6 +971,35 @@ const DailyReportPlatform = () => {
       const newValue = e.target.value;
       setLocalCaption(newValue);
       onCaptionChange(section, media, index, newValue);
+      
+      // 한글 입력 완료 후 커서를 맨 끝으로 이동
+      setTimeout(() => {
+        if (inputRef.current) {
+          const length = newValue.length;
+          inputRef.current.setSelectionRange(length, length);
+          inputRef.current.focus();
+        }
+      }, 0);
+    };
+    
+    const handleInputClick = (e) => {
+      e.stopPropagation();
+      // 클릭 시 커서 위치 유지
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+    
+    const handleInputKeyDown = (e) => {
+      e.stopPropagation();
+      // 입력 후 커서 유지를 위한 처리
+      if (!isComposing && (e.key === 'Backspace' || e.key === 'Delete')) {
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, 0);
+      }
     };
     
     return (
@@ -1052,11 +1082,14 @@ const DailyReportPlatform = () => {
                 이미지 캡션:
               </label>
               <input
+                ref={inputRef}
                 type="text"
                 value={localCaption}
                 onChange={handleCaptionInputChange}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
+                onClick={handleInputClick}
+                onKeyDown={handleInputKeyDown}
                 placeholder="캡션을 입력하세요 (선택사항)"
                 style={{
                   width: '100%',
