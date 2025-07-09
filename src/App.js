@@ -1037,6 +1037,8 @@ const DailyReportPlatform = () => {
                   outline: 'none',
                   boxSizing: 'border-box'
                 }}
+                onFocus={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
               />
             </div>
           </div>
@@ -1688,24 +1690,6 @@ const DailyReportPlatform = () => {
                     마지막 수정: {lastUpdatedBy}
                   </span>
                 )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#6B7280' }}>
-                  v{reportData.version || 1}
-                </div>
-                <button
-                  onClick={() => setShowTeamView(true)}
-                  style={{ 
-                    ...styles.button, 
-                    backgroundColor: '#3B82F6', 
-                    color: 'white',
-                    padding: '8px 16px',
-                    fontSize: '12px'
-                  }}
-                >
-                  <span>👥</span>
-                  팀 현황
-                </button>
               </div>
             </div>
           </div>
