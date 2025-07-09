@@ -943,46 +943,12 @@ const DailyReportPlatform = () => {
 
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
-    const [inputValue, setInputValue] = useState(safeImage.caption || '');
-    const [isComposing, setIsComposing] = useState(false);
-    const inputRef = useRef(null);
     
-    // 부모에서 데이터가 변경될 때만 로컬 상태 동기화
-    useEffect(() => {
-      if (!isComposing) {
-        setInputValue(safeImage.caption || '');
-      }
-    }, [safeImage.caption, isComposing]);
-    
+    // 한글 입력 문제 해결을 위한 간단한 방법
     const handleInputChange = (e) => {
       const newValue = e.target.value;
-      setInputValue(newValue);
-      
-      // 한글 입력 중이 아닐 때만 부모 상태 업데이트
-      if (!isComposing) {
-        onCaptionChange(section, media, index, newValue);
-      }
-    };
-    
-    const handleCompositionStart = () => {
-      setIsComposing(true);
-    };
-    
-    const handleCompositionEnd = (e) => {
-      setIsComposing(false);
-      const newValue = e.target.value;
-      setInputValue(newValue);
+      // 직접 부모 상태 업데이트 (중간 상태 없이)
       onCaptionChange(section, media, index, newValue);
-    };
-    
-    const handleInputFocus = () => {
-      if (inputRef.current) {
-        // 포커스 시 커서를 맨 끝으로
-        const length = inputValue.length;
-        setTimeout(() => {
-          inputRef.current.setSelectionRange(length, length);
-        }, 0);
-      }
     };
     
     return (
@@ -1064,15 +1030,11 @@ const DailyReportPlatform = () => {
               }}>
                 이미지 캡션:
               </label>
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
+              <textarea
+                value={safeImage.caption || ''}
                 onChange={handleInputChange}
-                onCompositionStart={handleCompositionStart}
-                onCompositionEnd={handleCompositionEnd}
-                onFocus={handleInputFocus}
                 placeholder="캡션을 입력하세요 (선택사항)"
+                rows={2}
                 style={{
                   width: '100%',
                   padding: '8px',
@@ -1081,7 +1043,10 @@ const DailyReportPlatform = () => {
                   borderRadius: '6px',
                   backgroundColor: 'white',
                   outline: 'none',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  resize: 'vertical',
+                  minHeight: '36px',
+                  fontFamily: 'inherit'
                 }}
                 autoComplete="off"
                 spellCheck="false"
