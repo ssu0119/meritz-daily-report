@@ -809,6 +809,7 @@ const DailyReportPlatform = () => {
   };
 
   const handleCaptionChange = (section, media, index, caption) => {
+    // 한글 입력 최적화: 즉시 상태 업데이트
     if (section === 'daOverall') {
       setReportData(prev => ({
         ...prev,
@@ -1039,6 +1040,9 @@ const DailyReportPlatform = () => {
                 }}
                 onFocus={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
+                onCompositionStart={(e) => e.stopPropagation()}
+                onCompositionEnd={(e) => e.stopPropagation()}
+                autoComplete="off"
               />
             </div>
           </div>
