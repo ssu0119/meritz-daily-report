@@ -943,63 +943,18 @@ const DailyReportPlatform = () => {
 
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
-    const [localCaption, setLocalCaption] = useState(safeImage.caption || '');
-    const [isComposing, setIsComposing] = useState(false);
-    const inputRef = useRef(null);
     
-    // 부모 컴포넌트 상태가 변경될 때 로컬 상태도 동기화
-    useEffect(() => {
-      setLocalCaption(safeImage.caption || '');
-    }, [safeImage.caption]);
-    
-    const handleCaptionInputChange = (e) => {
+    // 직접적인 input 핸들링 - 한글 입력 문제 해결
+    const handleInputChange = (e) => {
       const newValue = e.target.value;
-      setLocalCaption(newValue);
-      
-      // 한글 입력 중이 아닐 때만 부모 상태 업데이트
-      if (!isComposing) {
-        onCaptionChange(section, media, index, newValue);
-      }
-    };
-    
-    const handleCompositionStart = () => {
-      setIsComposing(true);
-    };
-    
-    const handleCompositionEnd = (e) => {
-      setIsComposing(false);
-      const newValue = e.target.value;
-      setLocalCaption(newValue);
       onCaptionChange(section, media, index, newValue);
-      
-      // 한글 입력 완료 후 커서를 맨 끝으로 이동
-      setTimeout(() => {
-        if (inputRef.current) {
-          const length = newValue.length;
-          inputRef.current.setSelectionRange(length, length);
-          inputRef.current.focus();
-        }
-      }, 0);
     };
     
-    const handleInputClick = (e) => {
-      e.stopPropagation();
-      // 클릭 시 커서 위치 유지
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    };
-    
-    const handleInputKeyDown = (e) => {
-      e.stopPropagation();
-      // 입력 후 커서 유지를 위한 처리
-      if (!isComposing && (e.key === 'Backspace' || e.key === 'Delete')) {
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.focus();
-          }
-        }, 0);
-      }
+    // 포커스 유지를 위한 핸들러
+    const handleInputBlur = (e) => {
+      // blur 이벤트를 방지하여 포커스 유지
+      e.preventDefault();
+      e.target.focus();
     };
     
     return (
@@ -1082,14 +1037,10 @@ const DailyReportPlatform = () => {
                 이미지 캡션:
               </label>
               <input
-                ref={inputRef}
+                key={`caption-${section}-${media}-${index}`}
                 type="text"
-                value={localCaption}
-                onChange={handleCaptionInputChange}
-                onCompositionStart={handleCompositionStart}
-                onCompositionEnd={handleCompositionEnd}
-                onClick={handleInputClick}
-                onKeyDown={handleInputKeyDown}
+                defaultValue={safeImage.caption || ''}
+                onChange={handleInputChange}
                 placeholder="캡션을 입력하세요 (선택사항)"
                 style={{
                   width: '100%',
@@ -1103,6 +1054,7 @@ const DailyReportPlatform = () => {
                 }}
                 autoComplete="off"
                 spellCheck="false"
+                autoFocus={false}
               />
             </div>
           </div>
