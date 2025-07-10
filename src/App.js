@@ -809,6 +809,7 @@ const DailyReportPlatform = () => {
   };
 
   const handleCaptionChange = (section, media, index, caption) => {
+    // 한글 입력 최적화: 즉시 상태 업데이트
     if (section === 'daOverall') {
       setReportData(prev => ({
         ...prev,
@@ -940,42 +941,43 @@ const DailyReportPlatform = () => {
     }
   };
 
-  // 🔥 한글 입력 최적화된 ImageUploadSlot 컴포넌트
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
     const [localCaption, setLocalCaption] = useState(safeImage.caption || '');
-    const [isComposing, setIsComposing] = useState(false);
-    const textareaRef = useRef(null);
+    const timeoutRef = useRef(null);
     
-    // 🔥 한글 입력 상태 관리 (간단하게 수정)
-    const handleCompositionStart = () => {
-      setIsComposing(true);
-    };
+    // 디바운스된 상태 업데이트
+    const debouncedUpdate = useCallback((value) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        onCaptionChange(section, media, index, value);
+      }, 300); // 300ms 디바운스
+    }, [section, media, index, onCaptionChange]);
     
-    const handleCompositionEnd = (e) => {
-      setIsComposing(false);
-      // 조합 완료 후 즉시 부모 상태 업데이트
-      const newValue = e.target.value;
-      onCaptionChange(section, media, index, newValue);
-    };
-    
-    // 🔥 입력값 변경 처리 (더 간단한 방식)
+    // 입력값 변경 처리
     const handleInputChange = (e) => {
       const newValue = e.target.value;
       setLocalCaption(newValue);
-      
-      // 한글 조합 중이 아닐 때만 부모 상태 업데이트
-      if (!isComposing) {
-        onCaptionChange(section, media, index, newValue);
-      }
+      debouncedUpdate(newValue);
     };
     
-    // 부모 데이터 변경 시 동기화
+    // 부모 데이터 변경 시 동기화 (최초 로드 시에만)
     useEffect(() => {
-      if (safeImage.caption !== localCaption) {
+      if (safeImage.caption !== localCaption && localCaption === '') {
         setLocalCaption(safeImage.caption || '');
       }
     }, [safeImage.caption]);
+    
+    // 컴포넌트 언마운트 시 타이머 정리
+    useEffect(() => {
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, []);
     
     return (
       <div style={{
@@ -1057,11 +1059,8 @@ const DailyReportPlatform = () => {
                 이미지 캡션:
               </label>
               <textarea
-                ref={textareaRef}
                 value={localCaption}
                 onChange={handleInputChange}
-                onCompositionStart={handleCompositionStart}
-                onCompositionEnd={handleCompositionEnd}
                 placeholder="캡션을 입력하세요 (선택사항)"
                 rows={2}
                 style={{
@@ -1079,7 +1078,6 @@ const DailyReportPlatform = () => {
                 }}
                 autoComplete="off"
                 spellCheck="false"
-                lang="ko"
               />
             </div>
           </div>
