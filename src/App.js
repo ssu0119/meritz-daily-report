@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 
@@ -943,13 +943,41 @@ const DailyReportPlatform = () => {
 
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
+    const [localCaption, setLocalCaption] = useState(safeImage.caption || '');
+    const timeoutRef = useRef(null);
     
-    // 한글 입력 문제 해결을 위한 간단한 방법
+    // 디바운스된 상태 업데이트
+    const debouncedUpdate = useCallback((value) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        onCaptionChange(section, media, index, value);
+      }, 300); // 300ms 디바운스
+    }, [section, media, index, onCaptionChange]);
+    
+    // 입력값 변경 처리
     const handleInputChange = (e) => {
       const newValue = e.target.value;
-      // 직접 부모 상태 업데이트 (중간 상태 없이)
-      onCaptionChange(section, media, index, newValue);
+      setLocalCaption(newValue);
+      debouncedUpdate(newValue);
     };
+    
+    // 부모 데이터 변경 시 동기화 (최초 로드 시에만)
+    useEffect(() => {
+      if (safeImage.caption !== localCaption && localCaption === '') {
+        setLocalCaption(safeImage.caption || '');
+      }
+    }, [safeImage.caption]);
+    
+    // 컴포넌트 언마운트 시 타이머 정리
+    useEffect(() => {
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, []);
     
     return (
       <div style={{
@@ -1031,7 +1059,7 @@ const DailyReportPlatform = () => {
                 이미지 캡션:
               </label>
               <textarea
-                value={safeImage.caption || ''}
+                value={localCaption}
                 onChange={handleInputChange}
                 placeholder="캡션을 입력하세요 (선택사항)"
                 rows={2}
