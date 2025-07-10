@@ -947,19 +947,19 @@ const DailyReportPlatform = () => {
     const [isComposing, setIsComposing] = useState(false);
     const textareaRef = useRef(null);
     
-    // 🔥 한글 입력 상태 관리
+    // 🔥 한글 입력 상태 관리 (간단하게 수정)
     const handleCompositionStart = () => {
       setIsComposing(true);
     };
     
     const handleCompositionEnd = (e) => {
       setIsComposing(false);
+      // 조합 완료 후 즉시 부모 상태 업데이트
       const newValue = e.target.value;
-      setLocalCaption(newValue);
       onCaptionChange(section, media, index, newValue);
     };
     
-    // 🔥 입력값 변경 처리 (한글 입력 최적화)
+    // 🔥 입력값 변경 처리 (더 간단한 방식)
     const handleInputChange = (e) => {
       const newValue = e.target.value;
       setLocalCaption(newValue);
@@ -970,22 +970,9 @@ const DailyReportPlatform = () => {
       }
     };
     
-    // 🔥 키 이벤트 처리 (백스페이스 문제 해결)
-    const handleKeyDown = (e) => {
-      // 백스페이스 처리 개선
-      if (e.key === 'Backspace' && !isComposing) {
-        // 브라우저 기본 동작 허용하고 상태만 동기화
-        setTimeout(() => {
-          const currentValue = e.target.value;
-          setLocalCaption(currentValue);
-          onCaptionChange(section, media, index, currentValue);
-        }, 0);
-      }
-    };
-    
-    // 부모 데이터 변경 시 동기화 (최초 로드 시에만)
+    // 부모 데이터 변경 시 동기화
     useEffect(() => {
-      if (safeImage.caption !== localCaption && localCaption === '') {
+      if (safeImage.caption !== localCaption) {
         setLocalCaption(safeImage.caption || '');
       }
     }, [safeImage.caption]);
@@ -1075,7 +1062,6 @@ const DailyReportPlatform = () => {
                 onChange={handleInputChange}
                 onCompositionStart={handleCompositionStart}
                 onCompositionEnd={handleCompositionEnd}
-                onKeyDown={handleKeyDown}
                 placeholder="캡션을 입력하세요 (선택사항)"
                 rows={2}
                 style={{
@@ -1089,8 +1075,7 @@ const DailyReportPlatform = () => {
                   boxSizing: 'border-box',
                   resize: 'vertical',
                   minHeight: '36px',
-                  fontFamily: 'inherit',
-                  imeMode: 'active'
+                  fontFamily: 'inherit'
                 }}
                 autoComplete="off"
                 spellCheck="false"
