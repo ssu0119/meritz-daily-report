@@ -1,25 +1,13 @@
 // src/Login.js
-import React, { useState, useEffect } from 'react';
-import { signInWithPopup, GoogleAuthProvider, getAuth, onAuthStateChanged } from 'firebase/auth';
+import React, { useState } from 'react';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from './firebase';
-import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  // 이미 로그인되어 있으면 바로 홈으로 이동
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('이미 로그인됨:', user.email);
-        navigate('/', { replace: true });
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
-
   const handleLogin = async () => {
+    console.log('🎯 handleLogin 함수 실행됨!');
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     
@@ -31,6 +19,7 @@ const Login = () => {
       console.log('🔄 페이지 리다이렉트 시도...');
       console.log('현재 URL:', window.location.href);
 
+      // 홈으로 리다이렉트
       window.location.href = '/';
 
       console.log('✅ 리다이렉트 명령 실행됨');
