@@ -7,24 +7,41 @@ function Home() {
   const [input, setInput] = useState('');
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'dailyReports'), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setReports(data);
-    });
+    if (!auth.currentUser) {
+      console.warn('로그인한 사용자 없음');
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'dailyReports'),
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setReports(data);
+      },
+      (error) => {
+        console.error('데이터 구독 오류:', error);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
 
   const handleAdd = async () => {
     if (!input) return;
+
+    if (!auth.currentUser) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     try {
       await addDoc(collection(db, 'dailyReports'), {
         text: input,
         createdAt: new Date(),
-        userId: auth.currentUser?.uid || null,
+        userId: auth.currentUser.uid,
       });
       setInput('');
     } catch (error) {

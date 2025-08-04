@@ -1,3 +1,4 @@
+// src/DailyReportPlatform.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
