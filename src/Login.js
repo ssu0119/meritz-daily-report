@@ -28,10 +28,8 @@ const Login = () => {
       const result = await signInWithPopup(auth, provider);
       console.log('✅ 로그인 성공:', result.user.email);
       
-      // 잠시 기다린 후 리다이렉트 (Firebase 상태 업데이트 대기)
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 500);
+      // 강제로 페이지 새로고침하여 상태 동기화
+      window.location.reload();
       
     } catch (err) {
       console.error('❌ 로그인 실패:', err);
@@ -49,7 +47,6 @@ const Login = () => {
       }
       
       alert(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
