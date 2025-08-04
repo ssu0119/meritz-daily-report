@@ -29,7 +29,7 @@ const Login = () => {
       console.log('✅ 로그인 성공:', result.user.email);
       
       // 강제로 페이지 새로고침하여 상태 동기화
-      window.location.reload();
+      window.location.href='/';
       
     } catch (err) {
       console.error('❌ 로그인 실패:', err);
