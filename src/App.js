@@ -4,24 +4,48 @@ import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from 'firebas
 import { db, auth } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 
-// Login 컴포넌트 추가 (DailyReportPlatform 컴포넌트 위에)
+// App.js 안의 Login 컴포넌트를 이렇게 수정
 const Login = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleLogin = async () => {
+    console.log('🎯 handleLogin 함수 실행됨!');
+    setIsLoading(true);
     const provider = new GoogleAuthProvider();
+    
     try {
+      console.log('🔄 로그인 시도 중...');
       const result = await signInWithPopup(auth, provider);
-      console.log('로그인한 사용자:', result.user);
+      console.log('✅ 로그인 성공:', result.user.email);
+      
+      console.log('🔄 페이지 리다이렉트 시도...');
+      window.location.href = '/';
+      console.log('✅ 리다이렉트 명령 실행됨');
+      
     } catch (err) {
-      console.error('로그인 실패', err);
+      console.error('❌ 로그인 실패:', err);
       alert('로그인에 실패했습니다.');
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
       <h2 style={{ marginBottom: '20px' }}>로그인이 필요합니다</h2>
-      <button onClick={handleLogin} style={{ padding: '12px 24px', backgroundColor: '#4285F4', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}>
-        Google 로그인
+      <button 
+        onClick={handleLogin} 
+        disabled={isLoading}
+        style={{ 
+          padding: '12px 24px', 
+          backgroundColor: isLoading ? '#9ca3af' : '#4285F4', 
+          color: 'white', 
+          border: 'none', 
+          borderRadius: '6px', 
+          cursor: isLoading ? 'not-allowed' : 'pointer', 
+          fontSize: '16px' 
+        }}
+      >
+        {isLoading ? '로그인 중...' : 'Google 로그인'}
       </button>
     </div>
   );
