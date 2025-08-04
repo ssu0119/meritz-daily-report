@@ -1,13 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { db } from './firebase';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { db, auth } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
 
 // Login 컴포넌트 추가 (DailyReportPlatform 컴포넌트 위에)
 const Login = () => {
   const handleLogin = async () => {
-    const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -2561,14 +2560,19 @@ function App() {
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user);
-      setIsAuthChecked(true);
-    });
-    return () => unsubscribe();
-  }, []);
+useEffect(() => {
+  console.log('🚀 App 컴포넌트 시작');
+  
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    console.log('🔍 Auth 상태 변경:', user ? `로그인됨: ${user.email}` : '로그아웃됨');
+    setIsLoggedIn(!!user);
+    setIsAuthChecked(true);
+  });
+  
+  return () => unsubscribe();
+}, []);
+console.log('📊 현재 상태:', { isAuthChecked, isLoggedIn });
+
 
   if (!isAuthChecked) return <div>로딩 중...</div>;
 
