@@ -2562,16 +2562,39 @@ function App() {
 
 useEffect(() => {
   console.log('🚀 App 컴포넌트 시작');
+  console.log('🔧 Auth 객체:', auth);
+  console.log('🔧 현재 사용자 (즉시):', auth.currentUser);
   
   const unsubscribe = onAuthStateChanged(auth, (user) => {
-    console.log('🔍 Auth 상태 변경:', user ? `로그인됨: ${user.email}` : '로그아웃됨');
+    console.log('🔍 Auth 상태 변경 이벤트 발생!');
+    console.log('🔍 User 객체:', user);
+    console.log('🔍 User 존재 여부:', !!user);
+    
+    if (user) {
+      console.log('✅ 사용자 정보:', {
+        email: user.email,
+        uid: user.uid,
+        displayName: user.displayName
+      });
+    } else {
+      console.log('❌ 사용자 없음');
+    }
+    
     setIsLoggedIn(!!user);
     setIsAuthChecked(true);
+    
+    console.log('📊 상태 업데이트 완료 - isLoggedIn:', !!user);
   });
   
   return () => unsubscribe();
 }, []);
-console.log('📊 현재 상태:', { isAuthChecked, isLoggedIn });
+
+// 렌더링 상태 확인
+console.log('🎯 렌더링 시점 상태:', { 
+  isAuthChecked, 
+  isLoggedIn,
+  currentUser: auth.currentUser?.email || 'null'
+});
 
 
   if (!isAuthChecked) return <div>로딩 중...</div>;
