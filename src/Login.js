@@ -1,22 +1,24 @@
 // src/Login.js
 import React from 'react';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, provider } from './firebase';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from './firebase';
 
-export default function Login() {
+const Login = () => {
   const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      alert(`${result.user.email} 로그인 성공`);
+      await signInWithPopup(auth, provider);
     } catch (err) {
-      console.error(err);
-      alert('로그인 실패');
+      console.error('로그인 실패', err);
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20%' }}>
-      <button onClick={handleLogin}>Google 계정으로 로그인</button>
+    <div>
+      <h2>로그인이 필요합니다</h2>
+      <button onClick={handleLogin}>Google 로그인</button>
     </div>
   );
-}
+};
+
+export default Login;
