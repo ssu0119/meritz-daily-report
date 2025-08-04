@@ -1,7 +1,32 @@
-// src/DailyReportPlatform.js
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore';
+
+// Login 컴포넌트 추가 (DailyReportPlatform 컴포넌트 위에)
+const Login = () => {
+  const handleLogin = async () => {
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      console.log('로그인한 사용자:', result.user);
+    } catch (err) {
+      console.error('로그인 실패', err);
+      alert('로그인에 실패했습니다.');
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
+      <h2 style={{ marginBottom: '20px' }}>로그인이 필요합니다</h2>
+      <button onClick={handleLogin} style={{ padding: '12px 24px', backgroundColor: '#4285F4', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}>
+        Google 로그인
+      </button>
+    </div>
+  );
+};
 
 // Firebase 기본 저장 함수
 const saveToFirebase = async (date, reportData) => {
@@ -2531,4 +2556,30 @@ const DailyReportPlatform = () => {
   );
 };
 
-export default DailyReportPlatform;
+// 맨 마지막 export default 부분만 이렇게 바꾸세요:
+function App() {
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+      setIsAuthChecked(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (!isAuthChecked) return <div>로딩 중...</div>;
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/*" element={isLoggedIn ? <DailyReportPlatform /> : <Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
