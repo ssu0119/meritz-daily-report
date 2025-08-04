@@ -28,9 +28,13 @@ const Login = () => {
       const result = await signInWithPopup(auth, provider);
       console.log('✅ 로그인 성공:', result.user.email);
       
-      // 강제로 페이지 새로고침하여 상태 동기화
-      window.location.href='/';
-      
+      console.log('🔄 페이지 리다이렉트 시도...');
+      console.log('현재 URL:', window.location.href);
+
+      window.location.href = '/';
+
+      console.log('✅ 리다이렉트 명령 실행됨');
+
     } catch (err) {
       console.error('❌ 로그인 실패:', err);
       console.error('에러 코드:', err.code);
