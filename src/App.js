@@ -13,10 +13,29 @@ const Login = () => {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     
+    // 특정 도메인만 허용하도록 설정
+    provider.setCustomParameters({
+      hd: 'echomarketing.co.kr' // Google Workspace 도메인 제한
+    });
+    
     try {
       console.log('🔄 로그인 시도 중...');
       const result = await signInWithPopup(auth, provider);
-      console.log('✅ 로그인 성공:', result.user.email);
+      
+      // 이메일 도메인 체크
+      const userEmail = result.user.email;
+      const emailDomain = userEmail.split('@')[1];
+      
+      console.log('✅ 로그인 성공:', userEmail);
+      console.log('🔍 이메일 도메인:', emailDomain);
+      
+      if (emailDomain !== 'echomarketing.co.kr') {
+        // 허용되지 않은 도메인인 경우 로그아웃
+        await auth.signOut();
+        alert('echomarketing.co.kr 도메인의 계정만 접속할 수 있습니다.');
+        setIsLoading(false);
+        return;
+      }
       
       console.log('🔄 페이지 리다이렉트 시도...');
       window.location.href = '/';
@@ -31,7 +50,10 @@ const Login = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '100px' }}>
-      <h2 style={{ marginBottom: '20px' }}>로그인이 필요합니다</h2>
+      <h2 style={{ marginBottom: '8px' }}>로그인이 필요합니다</h2>
+      <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '20px' }}>
+        echomarketing.co.kr 계정만 접속 가능합니다
+      </p>
       <button 
         onClick={handleLogin} 
         disabled={isLoading}
