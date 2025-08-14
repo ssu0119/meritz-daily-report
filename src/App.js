@@ -274,6 +274,54 @@ const migrateDataStructure = (data) => {
   return migratedData;
 };
 
+// 🖼️ 이미지 압축 함수 (DailyReportPlatform 컴포넌트 바로 위에 추가)
+const compressImage = (file, maxSizeKB = 800) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // 이미지 크기 조정 (최대 1200px)
+      const maxWidth = 1200;
+      const maxHeight = 1200;
+      
+      let { width, height } = img;
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // 이미지 그리기
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // 품질 조정하면서 압축
+      let quality = 0.8;
+      let compressedDataUrl;
+      
+      do {
+        compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        quality -= 0.1;
+      } while (compressedDataUrl.length > maxSizeKB * 1024 * 1.37 && quality > 0.1); // Base64는 약 37% 더 큼
+      
+      resolve(compressedDataUrl);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 const DailyReportPlatform = () => {
   const [currentMedia, setCurrentMedia] = useState('');
   const [reportData, setReportData] = useState({
@@ -962,55 +1010,67 @@ const DailyReportPlatform = () => {
     setPopupImage(null);
   };
 
-  const handleImagePaste = (e, section, media = null, imageIndex = 0) => {
-    e.preventDefault();
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        const blob = items[i].getAsFile();
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const imageData = event.target.result;
-          if (section === 'daOverall') {
-            setReportData(prev => ({
-              ...prev,
-              daOverall: { 
-                ...prev.daOverall, 
-                images: prev.daOverall.images.map((img, idx) => 
-                  idx === imageIndex ? { src: imageData, includeInEmail: true, caption: img.caption || '' } : img
+const handleImagePaste = async (e, section, media = null, imageIndex = 0) => {
+  e.preventDefault();
+  const items = e.clipboardData.items;
+  
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      const blob = items[i].getAsFile();
+      
+      try {
+        console.log('📷 원본 이미지 크기:', Math.round(blob.size / 1024), 'KB');
+        
+        // 이미지 압축
+        const compressedImage = await compressImage(blob);
+        const compressedSize = Math.round(compressedImage.length / 1024 * 0.75); // 대략적인 크기
+        
+        console.log('📷 압축된 이미지 크기:', compressedSize, 'KB');
+        
+        if (section === 'daOverall') {
+          setReportData(prev => ({
+            ...prev,
+            daOverall: { 
+              ...prev.daOverall, 
+              images: prev.daOverall.images.map((img, idx) => 
+                idx === imageIndex ? { src: compressedImage, includeInEmail: true, caption: img.caption || '' } : img
+              )
+            }
+          }));
+        } else if (section === 'mediaDetails') {
+          setReportData(prev => ({
+            ...prev,
+            mediaDetails: {
+              ...prev.mediaDetails,
+              [media]: { 
+                ...prev.mediaDetails[media], 
+                images: prev.mediaDetails[media].images.map((img, idx) => 
+                  idx === imageIndex ? { src: compressedImage, includeInEmail: true, caption: img.caption || '' } : img
                 )
               }
-            }));
-          } else if (section === 'mediaDetails') {
-            setReportData(prev => ({
-              ...prev,
-              mediaDetails: {
-                ...prev.mediaDetails,
-                [media]: { 
-                  ...prev.mediaDetails[media], 
-                  images: prev.mediaDetails[media].images.map((img, idx) => 
-                    idx === imageIndex ? { src: imageData, includeInEmail: true, caption: img.caption || '' } : img
-                  )
-                }
-              }
-            }));
-          } else if (section === 'partnership') {
-            setReportData(prev => ({
-              ...prev,
-              partnership: { 
-                ...prev.partnership, 
-                images: prev.partnership.images.map((img, idx) => 
-                  idx === imageIndex ? { src: imageData, includeInEmail: true, caption: img.caption || '' } : img
-                )
-              }
-            }));
-          }
-        };
-        reader.readAsDataURL(blob);
-        break;
+            }
+          }));
+        } else if (section === 'partnership') {
+          setReportData(prev => ({
+            ...prev,
+            partnership: { 
+              ...prev.partnership, 
+              images: prev.partnership.images.map((img, idx) => 
+                idx === imageIndex ? { src: compressedImage, includeInEmail: true, caption: img.caption || '' } : img
+              )
+            }
+          }));
+        }
+        
+      } catch (error) {
+        console.error('이미지 압축 실패:', error);
+        alert('이미지 처리에 실패했습니다. 다른 이미지를 시도해주세요.');
       }
+      
+      break;
     }
-  };
+  }
+};
 
   const ImageUploadSlot = ({ image, onDelete, onCheckboxChange, onCaptionChange, onPaste, section, media, index, isLarge = false, disabled = false }) => {
     const safeImage = image || { src: null, includeInEmail: false, caption: '' };
