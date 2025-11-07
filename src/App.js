@@ -568,7 +568,7 @@ const DailyReportPlatform = () => {
     },
     actionGrid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(2, 1fr)',
+      gridTemplateColumns: 'repeat(3, 1fr)',
       gap: '12px'
     },
     modal: {
@@ -871,7 +871,7 @@ const DailyReportPlatform = () => {
           }
         }
       }
-    }, 25000); // 25초
+    }, 10000); // 10초
 
     return () => clearInterval(autoSaveInterval);
   }, [reportData, isLoading, currentMedia]);
@@ -1993,19 +1993,6 @@ const handleImagePaste = async (e, section, media = null, imageIndex = 0) => {
             >
               <span>👁️</span>
               전체 미리보기
-            </button>
-            <button
-              onClick={saveCurrentData}
-              style={{ 
-                ...styles.button, 
-                backgroundColor: saveSuccess ? '#10B981' : '#22C55E', 
-                color: 'white',
-                justifyContent: 'center'
-              }}
-              disabled={isLoading}
-            >
-              <span>💾</span>
-              {saveSuccess ? '저장 완료!' : '전체 저장하기'}
             </button>
             <button
               onClick={() => setShowArchive(true)}
