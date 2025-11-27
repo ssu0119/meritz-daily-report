@@ -1470,7 +1470,7 @@ const handleImagePaste = async (e, section, media = null, imageIndex = 0) => {
       const emailDate = formatEmailDate(reportData.date);
       const subject = `[에코/장기TM/DA] 메리츠화재 데일리보고_25년 ${emailDate}`;
       const recipients = '받는사람: 박영빈님/TM마케팅파트 <yb.park@meritz.co.kr>';
-      const cc = '참조: 김윤희님/TM마케팅파트 <yoonhee.k@meritz.co.kr>, 이원진/리더/TM마케팅파트 <wonjin.lee@meritz.co.kr>, echo_메리츠다이렉트 <echo_meritzdirect@echomarketing.co.kr>, 디트라이브_팀메일 <meritz@dtribe.co.kr>';
+      const cc = '참조: 김윤희님/TM마케팅파트 <yoonhee.k@meritz.co.kr>, 이원진/리더/TM마케팅파트 <wonjin.lee@meritz.co.kr>, echo_메리츠다이렉트 <echo_meritzdirect@echomarketing.co.kr>, 디트라이브_팀메일 <meritz@dtribe.co.kr>,wooseok.kim2@cj.net, dbasen04@cj.net';
       
       const fullEmail = `${subject}\n\n${recipients}\n${cc}\n\n${generatedEmail}`;
       
@@ -1492,7 +1492,7 @@ const handleImagePaste = async (e, section, media = null, imageIndex = 0) => {
       const emailDate = formatEmailDate(reportData.date);
       const subject = `[에코/장기TM/DA] 메리츠화재 데일리보고_25년 ${emailDate}`;
       const toEmail = 'yb.park@meritz.co.kr';
-      const ccEmails = 'yoonhee.k@meritz.co.kr,wonjin.lee@meritz.co.kr,echo_meritzdirect@echomarketing.co.kr,meritz@dtribe.co.kr';
+      const ccEmails = 'yoonhee.k@meritz.co.kr,wonjin.lee@meritz.co.kr,echo_meritzdirect@echomarketing.co.kr,meritz@dtribe.co.kr,wooseok.kim2@cj.net,dbasen04@cj.net';
       
       const gmailUrl = `https://mail.google.com/mail/u/0/?fs=1&tf=cm` +
         `&su=${encodeURIComponent(subject)}` +
