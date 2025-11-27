@@ -2141,7 +2141,7 @@ const handleImagePaste = async (e, section, media = null, imageIndex = 0) => {
                 <strong>받는사람:</strong> 박영빈님/TM마케팅파트 &lt;yb.park@meritz.co.kr&gt;
               </p>
               <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
-                <strong>참조:</strong> 김윤희님/TM마케팅파트, 이원진/리더/TM마케팅파트, echo_메리츠다이렉트, 디트라이브_팀메일
+                <strong>참조:</strong> 김윤희님/TM마케팅파트, 이원진/리더/TM마케팅파트, echo_메리츠다이렉트, 디트라이브_팀메일, wooseok.kim2@cj.net, dbasen04@cj.net
               </p>
               <p style={{ fontSize: '14px', color: '#1E40AF', margin: '4px 0' }}>
                 <strong>제목:</strong> [에코/장기TM/DA] 메리츠화재 데일리보고_25년 {formatEmailDate(reportData.date)}
